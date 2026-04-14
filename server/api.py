@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server import config
 from hardware import arduino, esp32
 
+
 app = FastAPI()
 
 app.add_middleware(
@@ -49,3 +50,11 @@ def motor_set_speed(data):
 @app.get("/config")
 def get_config():
     return JSONResponse(config.get_config())
+
+@app.post("/updateConfig")
+def update_config(data: dict):
+    config.save_config_str(data["config"])
+
+@app.post("/sendActions")
+def send_actions(data):
+    config.save_config_str(data.config)

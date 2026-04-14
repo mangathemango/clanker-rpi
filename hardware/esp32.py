@@ -1,7 +1,7 @@
 import serial
 import time
 
-esp32_serial = serial.Serial('dev/ttyUSB1', 115200)
+esp32_serial = serial.Serial('/dev/ttyUSB1', 115200)
 
 def set_target_speed(motor_id, speed):
     #0xFF 0 Motor_id 0 speed_arg

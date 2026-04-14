@@ -4,10 +4,11 @@ sys.path.append("..")
 
 import cv2
 import numpy as np
-from server.config import conf
+from server.config import global_config
 
 def classify_color(hsv_img, x, y, r):
-    cv_conf = conf["cv"]
+    global global_config
+    cv_conf = global_config["cv"]
     for i in range(100):
         # Create mask for this circle
         mask = np.zeros(hsv_img.shape[:2], dtype=np.uint8)
@@ -50,26 +51,27 @@ def classify_color(hsv_img, x, y, r):
 
 
 def detect_circles_and_colors(input_path, output_path):
+    global global_config
     img = cv2.imread(input_path)
     output = img.copy()
 
     # Resize for speed
-    img = cv2.resize(img, (conf["cv"]["camera"]["width"], conf["cv"]["camera"]["height"]))
-    output = cv2.resize(output, (conf["cv"]["camera"]["width"], conf["cv"]["camera"]["height"]))
+    img = cv2.resize(img, (global_config["cv"]["camera"]["width"], global_config["cv"]["camera"]["height"]))
+    output = cv2.resize(output, (global_config["cv"]["camera"]["width"], global_config["cv"]["camera"]["height"]))
 
-    blurred = cv2.GaussianBlur(img, (conf["cv"]["preprocess"]["blur_kernel"], conf["cv"]["preprocess"]["blur_kernel"]), 2)
+    blurred = cv2.GaussianBlur(img, (global_config["cv"]["preprocess"]["blur_kernel"], global_config["cv"]["preprocess"]["blur_kernel"]), 2)
     gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     circles = cv2.HoughCircles(
         gray,
         cv2.HOUGH_GRADIENT,
-        dp=conf["cv"]["hough"]["dp"],
-        minDist=conf["cv"]["hough"]["minDist"],
-        param1=conf["cv"]["hough"]["param1"],
-        param2=conf["cv"]["hough"]["param2"],
-        minRadius=conf["cv"]["hough"]["minRadius"],
-        maxRadius=conf["cv"]["hough"]["maxRadius"]
+        dp=global_config["cv"]["hough"]["dp"],
+        minDist=global_config["cv"]["hough"]["minDist"],
+        param1=global_config["cv"]["hough"]["param1"],
+        param2=global_config["cv"]["hough"]["param2"],
+        minRadius=global_config["cv"]["hough"]["minRadius"],
+        maxRadius=global_config["cv"]["hough"]["maxRadius"]
     )
 
     if circles is not None:

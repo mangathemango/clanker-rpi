@@ -6,18 +6,20 @@ def get_config():
         return json.loads(conf_json.read())
 
 
-config = get_config()
+global_config = get_config()
 
 def save_config():
-    global config
+    global global_config
+    print("Saving config")
     with open("config.json", "w") as conf_json:
-        conf_json.write(json.dumps(config))
+        conf_json.write(json.dumps(global_config))
+    
 
 def save_config_str(str):
-    global config
-    config = json.loads(str)
+    global global_config
+    global_config = json.loads(str)
     save_config()
 
 def update_config():
-    global config
-    config = get_config()
+    global global_config
+    global_config = get_config()

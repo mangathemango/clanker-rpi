@@ -1,114 +1,136 @@
 {
+  "cv": {
+    "hsv": {
+      "red": {
+        "lower1": 1,
+        "upper1": [
+          10,
+          255,
+          255
+        ],
+        "lower2": [
+          160,
+          100,
+          100
+        ],
+        "upper2": [
+          180,
+          255,
+          255
+        ]
+      },
+      "green": {
+        "lower": [
+          35,
+          80,
+          80
+        ],
+        "upper": [
+          90,
+          255,
+          255
+        ]
+      },
+      "blue": {
+        "lower": [
+          90,
+          80,
+          80
+        ],
+        "upper": [
+          130,
+          255,
+          255
+        ]
+      }
+    },
+    "hough": {
+      "dp": 1.2,
+      "minDist": 100,
+      "param1": 100,
+      "param2": 30,
+      "minRadius": 30,
+      "maxRadius": 80
+    },
+    "preprocess": {
+      "blur_kernel": 9,
+      "canny_threshold1": 100,
+      "canny_threshold2": 200,
+      "morph_kernel": 5
+    },
+    "camera": {
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    }
+  },
+  "actionQueue": [
+{
     "name": "Move to Qr Code",
     "actions": [
         {
-            "endpoint": "calibrateStart"
+            "name": "calibrateStart"
         },
         {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "A",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 1,
+                "time": 5
             }
         },
         {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "C",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 2,
+                "time": 5
             }
         },
         {
-            "endpoint": "delay",
-            "data": {
+            "name": "sleep",
+            "args": {
                 "ms": 500
             }
         },
         {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "A",
-                "speed": 0
-            }
-        },
-        {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "C",
-                "speed": 0
-            }
-        },
-        {
-            "endpoint": "delay",
-            "data": {
-                "ms": 500
-            }
-        },
-        {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "A",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 0,
+                "time": 10
             }
         },
                 {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "B",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 1,
+                "time": 10
             }
         },
                 {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "C",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 2,
+                "time": 10
             }
         },
         {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "D",
-                "speed": 100
+            "name": "startMove",
+            "args": {
+                "motor": 3,
+                "time": 10
             }
         },
         {
-            "endpoint": "delay",
-            "data": {
-                "ms": 500
+            "name": "sleep",
+            "args": {
+                "ms": 1000
             }
         },
         {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "A",
-                "speed": 0
-            }
-        },
-                {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "B",
-                "speed": 0
-            }
-        },
-                {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "C",
-                "speed": 0
-            }
-        },
-        {
-            "endpoint": "setMotorTargetSpeed",
-            "data": {
-                "motor": "D",
-                "speed": 0
-            }
-        },
-        {
-            "endpoint": "scanQRCode"
+            "name": "scanQRCode"
         }
         
     ]
 }
+]
+}
+        

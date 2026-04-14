@@ -5,9 +5,10 @@ sys.path.append("..")
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
-from server import config
-from hardware import arduino, esp32
+import config
+
 
 
 app = FastAPI()
@@ -20,32 +21,35 @@ app.add_middleware(
         allow_headers=["*"]
 )
 
+try:
+    from hardware import arduino, esp32
+    @app.get("/frame")
+    def get_frame():
+        return FileResponse("../frame.jpg", media_type="image/jpeg")
 
-@app.get("/frame")
-def get_frame():
-    return FileResponse("../frame.jpg", media_type="image/jpeg")
+    @app.post("/setArmMotorPositionUp")
+    def set_arm_motor_position_up():
+        arduino.set_arm_motor_position_up()
 
-@app.post("/setArmMotorPositionUp")
-def set_arm_motor_position_up():
-    arduino.set_arm_motor_position_up()
+    @app.post("/setArmMotorPositionDown")
+    def reset_arm_motor_position():
+        arduino.set_arm_motor_position_down()
 
-@app.post("/setArmMotorPositionDown")
-def reset_arm_motor_position():
-    arduino.set_arm_motor_position_down()
+    @app.post("/resetArmMotorPosition")
+    def reset_arm_motor_position():
+        arduino.reset_arm_motor_position()
 
-@app.post("/resetArmMotorPosition")
-def reset_arm_motor_position():
-    arduino.reset_arm_motor_position()
+    @app.post("/resetArmMotorPosition")
+    def reset_arm_motor_position():
+        arduino.reset_arm_motor_position()
 
-@app.post("/resetArmMotorPosition")
-def reset_arm_motor_position():
-    arduino.reset_arm_motor_position()
-
-@app.post("/motorSetSpeed")
-def motor_set_speed(data):
-    motor = data.motor
-    speed = data.speed
-    esp32.motor_set_speed(motor, speed)
+    @app.post("/motorSetSpeed")
+    def motor_set_speed(data):
+        motor = data.motor
+        speed = data.speed
+        esp32.motor_set_speed(motor, speed)
+except Exception as e:
+    print(e)
 
 @app.get("/config")
 def get_config():
@@ -58,3 +62,5 @@ def update_config(data: dict):
 @app.post("/sendActions")
 def send_actions(data):
     config.save_config_str(data.config)
+
+uvicorn.run(app=app, port=8000)

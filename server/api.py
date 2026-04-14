@@ -48,5 +48,5 @@ def motor_set_speed(data):
 
 @app.get("/config")
 def get_config():
-    return JSONResponse("config.json")
+    return JSONResponse(config.get_config())
 

@@ -3,10 +3,10 @@ import sys
 sys.path.append("..")
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-
+from server import config
 from hardware import arduino, esp32
 
 app = FastAPI()
@@ -46,4 +46,7 @@ def motor_set_speed(data):
     speed = data.speed
     esp32.motor_set_speed(motor, speed)
 
+@app.get("/config")
+def get_config():
+    return JSONResponse("config.json")
 

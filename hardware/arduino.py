@@ -1,6 +1,6 @@
 import serial
 
-arduino_serial = serial.Serial('/dev/ttyS0', 115200)
+# arduino_serial = serial.Serial('/dev/ttyS0', 115200)
 
 def set_arm_motor_position_up():
     pass

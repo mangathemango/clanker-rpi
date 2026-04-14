@@ -1,0 +1,75 @@
+{
+  "cv": {
+    "hsv": {
+      "red": {
+        "lower1": [
+          0,
+          100,
+          100
+        ],
+        "upper1": [
+          10,
+          255,
+          255
+        ],
+        "lower2": [
+          160,
+          100,
+          100
+        ],
+        "upper2": [
+          180,
+          255,
+          255
+        ]
+      },
+      "green": {
+        "lower": [
+          35,
+          80,
+          80
+        ],
+        "upper": [
+          90,
+          255,
+          255
+        ]
+      },
+      "blue": {
+        "lower": [
+          90,
+          80,
+          80
+        ],
+        "upper": [
+          130,
+          255,
+          255
+        ]
+      }
+    },
+    "hough": {
+      "dp": 1.2,
+      "minDist": 100,
+      "param1": 100,
+      "param2": 30,
+      "minRadius": 30,
+      "maxRadius": 80
+    },
+    "preprocess": {
+      "blur_kernel": 9,
+      "canny_threshold1": 100,
+      "canny_threshold2": 200,
+      "morph_kernel": 5
+    },
+    "camera": {
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    }
+  },
+  "actionQueue": [
+
+  ]
+
+}

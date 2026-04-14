@@ -63,4 +63,4 @@ def update_config(data: dict):
 def send_actions(data):
     config.save_config_str(data.config)
 
-uvicorn.run(app=app, port=8000)
+uvicorn.run(app=app, host="0.0.0.0", port=8000)

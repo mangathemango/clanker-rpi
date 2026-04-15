@@ -1,13 +1,9 @@
-import sys
-
-sys.path.append("..")
-
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
 import config
+import robot
 
 
 
@@ -59,8 +55,12 @@ def get_config():
 def update_config(data: dict):
     config.save_config_str(data["config"])
 
-@app.post("/sendActions")
-def send_actions(data):
-    config.save_config_str(data.config)
+@app.post("/executeActions")
+def send_actions():
+    print("yes")
+    actionQueue = config.get_config()["actionQueue"]
+    for macro in actionQueue:
+        print("Processing macro: ", macro["name"])
+        robot.process_actions(macro["actions"])
 
-uvicorn.run(app=app, port=8000)
+

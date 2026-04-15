@@ -2,3 +2,8 @@ button {
     width: 100px;
     height: 50px;
 }
+
+#config-json {
+    width: 500px;
+    height: 500px;
+}

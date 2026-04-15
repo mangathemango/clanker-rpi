@@ -4,7 +4,7 @@ sys.path.append("..")
 
 import cv2
 import numpy as np
-from server.config import global_config
+from config import global_config
 
 def classify_color(hsv_img, x, y, r):
     global global_config

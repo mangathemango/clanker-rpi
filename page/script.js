@@ -52,3 +52,7 @@ const updateConfig = () => {
         console.log(res)
     })
 }
+
+const executeActions = () => {
+    sendRequest("/executeActions")
+}

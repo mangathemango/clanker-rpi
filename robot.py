@@ -2,13 +2,13 @@ import time
 from hardware import arduino, esp32
 
 def process_action(action):
+    print("Processing action: ", action)
     if action["name"] == "sleep":
-        print("sleeping")
         time.sleep(action["args"]["ms"] / 1000)
     if action["name"] == "startMove":
-        print("startmoving")
         esp32.start_move(action["args"]["motor"], action["args"]["time"])
     if action["name"] == "setTargetSpeed":
+        esp32.set_target_speed(action["args"]["motor"], action["args"]["speed"])
         pass
     if action["name"] == "setArmMotorPosition":
         pass

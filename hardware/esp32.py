@@ -1,7 +1,8 @@
 import serial
 import time
+import dotenv
 
-esp32_serial = None
+esp32_serial = serial.Serial(dotenv.get_key(".env", "ESP32_PORT"), 115200)
 
 def set_target_speed(motor_id, speed):
     #0xFF 0 Motor_id 0 speed_arg

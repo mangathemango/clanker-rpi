@@ -1,5 +1,6 @@
 import time
 from hardware import arduino, esp32
+from hardware.esp32 import esp32_serial
 
 def process_action(action):
     print("Processing action: ", action)
@@ -18,3 +19,4 @@ def process_action(action):
 def process_actions(actions):
     for action in actions:
         process_action(action)
+        print(esp32_serial.read_all())

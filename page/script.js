@@ -1,6 +1,6 @@
 const img = document.getElementById("cam");
 
-url = "http://127.0.0.1:8000"
+url = "http://100.71.55.8:8000"
 
 async function update() {
     const res = await fetch(url + "/frame");
@@ -56,3 +56,11 @@ const updateConfig = () => {
 const executeActions = () => {
     sendRequest("/executeActions")
 }
+
+const getConfig = () => {
+    fetch(url + "/config")
+        .then(res => res.text())
+        .then(data => document.getElementById("config-json").value = data)
+}
+
+getConfig()

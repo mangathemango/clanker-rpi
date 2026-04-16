@@ -1,6 +1,5 @@
 import time
 from hardware import arduino, esp32
-from hardware.esp32 import esp32_serial
 
 def process_action(action):
     print("Processing action: ", action)
@@ -10,11 +9,15 @@ def process_action(action):
         esp32.start_move(action["args"]["motor"], action["args"]["time"])
     if action["name"] == "setTargetSpeed":
         esp32.set_target_speed(action["args"]["motor"], action["args"]["speed"])
-        pass
     if action["name"] == "setArmMotorPosition":
-        pass
-    if action["name"] == "setArmMotorPositionUp":
-        pass
+        arduino.SetArmMotorPositionValue(action["args"]["value"])
+    if action["name"] == "resetArmMotorPosition":
+        arduino.ResetArmMotorPosition()
+    if action["name"] == "openClaw":
+        arduino.OpenClaw()
+    if action["name"] == "closeClaw": 
+        arduino.CloseClaw()
+        
 
 def process_actions(actions):
     for action in actions:

@@ -1,6 +1,7 @@
 import serial
+import dotenv
 
-# arduino_serial = serial.Serial('/dev/ttyS0', 115200)
+arduino_serial = serial.Serial(dotenv.get_key(".env", "ARDUINO_PORT"), 115200)
 
 def set_arm_motor_position_up():
     pass

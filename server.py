@@ -3,7 +3,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import config
-import robot
+import importlib
+import actions
 
 
 
@@ -57,12 +58,15 @@ def update_config(data: dict):
 
 @app.post("/executeActions")
 def execute_actions():
-    with open("actions.py", "r") as f:
-        exec(f.read())
+    try:
+        importlib.reload(actions)
+        actions.main()
+    except Exception as e:
+        print(e)
 
 
 @app.post("/updateActionScript")
 def update_action_script(data: dict):
-    with open("action.py", "w") as f:
+    with open("actions.py", "w") as f:
         bytes = f.write(data["actionScript"])
         print(f"Written {bytes} bytes into action.py")

@@ -23,4 +23,3 @@ def process_actions(actions):
     for action in actions:
         process_action(action)
         time.sleep(0.03)
-        print(esp32_serial.read_all())

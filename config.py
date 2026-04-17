@@ -16,9 +16,8 @@ def save_config():
     
 
 def save_config_str(str):
-    global global_config
-    global_config = json.loads(str)
-    save_config()
+    with open("config.json", "w") as conf_json:
+        conf_json.write(str)
 
 def update_config():
     global global_config

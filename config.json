@@ -7,16 +7,22 @@
         "lower2": [160, 100, 100],
         "upper2": [180, 255, 255]
       },
-      "green": { "lower": [35, 80, 80], "upper": [90, 255, 255] },
-      "blue": { "lower": [90, 80, 80], "upper": [130, 255, 255] }
+      "green": {
+        "lower": [35, 80, 80],
+        "upper": [90, 255, 255]
+      },
+      "blue": {
+        "lower": [90, 80, 80],
+        "upper": [130, 255, 255]
+      }
     },
     "hough": {
       "dp": 1.2,
       "minDist": 100,
       "param1": 100,
       "param2": 30,
-      "minRadius": 100,
-      "maxRadius": 400
+      "minRadius": 30,
+      "maxRadius": 80
     },
     "preprocess": {
       "blur_kernel": 9,
@@ -24,26 +30,94 @@
       "canny_threshold2": 200,
       "morph_kernel": 5
     },
-    "camera": { "width": 640, "height": 480, "fps": 30 }
+    "camera": {
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    }
   },
   "actionQueue": [
     {
       "name": "Move to Qr Code",
       "actions": [
-        { "name": "calibrateStart" },
-        { "name": "setTargetSpeed", "args": { "motor": 0, "speed": 100 } },
-        { "name": "setTargetSpeed", "args": { "motor": 1, "speed": 100 } },
-        { "name": "setTargetSpeed", "args": { "motor": 2, "speed": 100 } },
-        { "name": "setTargetSpeed", "args": { "motor": 3, "speed": 100 } },
-        { "name": "startMove", "args": { "motor": 1, "time": 10 } },
-        { "name": "startMove", "args": { "motor": 3, "time": 10 } },
-        { "name": "sleep", "args": { "ms": 1000 } },
-        { "name": "startMove", "args": { "motor": 0, "time": 15 } },
-        { "name": "startMove", "args": { "motor": 1, "time": 15 } },
-        { "name": "startMove", "args": { "motor": 2, "time": 15 } },
-        { "name": "startMove", "args": { "motor": 3, "time": 15 } },
-        { "name": "sleep", "args": { "ms": 1000 } },
-        { "name": "scanQRCode" }
+        {
+          "name": "grabProp"
+        },
+        {
+          "name": "openClaw"
+        },
+        {
+          "name": "setArmAngle",
+          "args": {
+            "angle": 20
+          }
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "setArmMotorPosition",
+          "args": {
+            "value": 2290
+          }
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "closeClaw"
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "setArmMotorPosition",
+          "args": {
+            "value": 2400
+          }
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "setArmAngle",
+          "args": {
+            "angle": 178
+          }
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "setArmMotorPosition",
+          "args": {
+            "value": 1800
+          }
+        },
+        {
+          "name": "sleep",
+          "args": {
+            "ms": 2000
+          }
+        },
+        {
+          "name": "openClaw"
+        }
       ]
     }
   ]

@@ -56,11 +56,12 @@ def update_config(data: dict):
     config.save_config_str(data["config"])
 
 @app.post("/executeActions")
-def send_actions():
-    print("yes")
-    actionQueue = config.get_config()["actionQueue"]
-    for macro in actionQueue:
-        print("Processing macro: ", macro["name"])
-        robot.process_actions(macro["actions"])
+def execute_actions():
+    with open("actions.py", "r") as f:
+        exec(f.read())
 
 
+@app.post("/updateActionScript")
+def update_action_script(data: dict):
+    with open("action.py", "w") as f:
+        f.write(data["actionScript"])

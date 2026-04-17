@@ -17,6 +17,8 @@ def process_action(action):
         arduino.OpenClaw()
     if action["name"] == "closeClaw": 
         arduino.CloseClaw()
+    if action["name"] == "setArmAngle":
+        esp32.set_angle(action["args"]["angle"])
         
 
 def process_actions(actions):

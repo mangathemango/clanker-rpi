@@ -68,73 +68,12 @@
         {
             "name": "Move to Qr Code",
             "actions": [
+                
                 {
-                    "name": "calibrateStart"
-                },
-                {
-                    "name": "setTargetSpeed",
+                    "name": "setArmAngle",
                     "args": {
-                        "motor": 0,
-                        "speed": 100
+                        "angle": 0
                     }
-                },
-                {
-                    "name": "setTargetSpeed",
-                    "args": {
-                        "motor": 1,
-                        "speed": 100
-                    }
-                },
-                {
-                    "name": "setTargetSpeed",
-                    "args": {
-                        "motor": 2,
-                        "speed": 100
-                    }
-                },
-                {
-                    "name": "setTargetSpeed",
-                    "args": {
-                        "motor": 3,
-                        "speed": 100
-                    }
-                },
-                {
-                    "name": "startMove",
-                    "args": {
-                        "motor": 0,
-                        "time": 15
-                    }
-                },
-                {
-                    "name": "startMove",
-                    "args": {
-                        "motor": 1,
-                        "time": 15
-                    }
-                },
-                {
-                    "name": "startMove",
-                    "args": {
-                        "motor": 2,
-                        "time": 15
-                    }
-                },
-                {
-                    "name": "startMove",
-                    "args": {
-                        "motor": 3,
-                        "time": 15
-                    }
-                },
-                {
-                    "name": "sleep",
-                    "args": {
-                        "ms": 1000
-                    }
-                },
-                {
-                    "name": "scanQRCode"
                 }
             ]
         }

@@ -64,4 +64,5 @@ def execute_actions():
 @app.post("/updateActionScript")
 def update_action_script(data: dict):
     with open("action.py", "w") as f:
-        f.write(data["actionScript"])
+        bytes = f.write(data["actionScript"])
+        print(f"Written {bytes} bytes into action.py")

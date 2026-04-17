@@ -7,17 +7,17 @@ url = "http://100.71.55.8:8000"
 
 const updateConfig = async () => {
     try {
-        const configData = fs.readFileSync('./config.json').toString()
+        const configData = fs.readFileSync('./actions.py').toString()
 
-        const postResponse = await fetch(url + "/updateConfig", {
+        const postResponse = await fetch(url + "/updateActionScript", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ "config": configData })
+            body: JSON.stringify({ "actionScript": configData })
         })
 
         console.log(postResponse)
     } catch (error) {
-        console.error("Error reading config.json:", error)
+        console.error("Error reading actions.py", error)
     }
 }
 

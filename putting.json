@@ -72,24 +72,24 @@
                     "name": "grabProp"
                 },
                 {
-                    "name" : "openClaw"
+                    "name" : "resetArmMotorPosition"
                 },
                 {
                     "name" : "setArmAngle",
                     "args" : {
-                        "angle" : 20
+                        "angle" : 178
                     }
                 },
                 {
                     "name" : "sleep",
                     "args" : {
-                        "ms" : 2000
+                        "ms" : 7000
                     }
                 },
                 {
                     "name" : "setArmMotorPosition",
                     "args" : {
-                        "value" : 2290
+                        "value" : 1000
                     }
                 },
                 {
@@ -108,43 +108,10 @@
                     }
                 },
                 {
-                    "name" : "setArmMotorPosition",
-                    "args" : {
-                        "value" : 2400
-                    }
-                },
-                {
-                    "name" : "sleep",
-                    "args" : {
-                        "ms" : 2000
-                    }
-                },
-                {
                     "name" : "setArmAngle",
                     "args" : {
-                        "angle" : 178
+                        "angle" : 20
                     }
-                },
-                {
-                    "name" : "sleep",
-                    "args" : {
-                        "ms" : 2000
-                    }
-                },
-                {
-                    "name" : "setArmMotorPosition",
-                    "args" : {
-                        "value" : 1800
-                    }
-                },
-                {
-                    "name" : "sleep",
-                    "args" : {
-                        "ms" : 2000
-                    }
-                },
-                {
-                    "name" : "openClaw"
                 }
             ]
         }

@@ -75,6 +75,9 @@
                     "name" : "openClaw"
                 },
                 {
+                    "name" : "resetArmMotorPosition"
+                },
+                {
                     "name" : "setArmAngle",
                     "args" : {
                         "angle" : 20

@@ -1,9 +1,13 @@
+const fs = require('fs')
+
+
+
+
 url = "http://100.71.55.8:8000"
 
 const updateConfig = async () => {
     try {
-        const response = await fetch("config.json")
-        const configData = await response.text()
+        const configData = fs.readFileSync('./config.json').toString()
 
         const postResponse = await fetch(url + "/updateConfig", {
             method: "POST",

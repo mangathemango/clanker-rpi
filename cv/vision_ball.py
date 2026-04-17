@@ -124,4 +124,4 @@ def run_camera(camera_index=1):
 
 
 # ---------------- RUN ----------------
-run_camera(0)
+run_camera(1)

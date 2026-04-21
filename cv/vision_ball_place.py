@@ -20,7 +20,7 @@ HOUGH_MIN_DIST = 80
 HOUGH_PARAM1 = 100
 HOUGH_PARAM2 = 80
 HOUGH_MIN_RADIUS = 20
-HOUGH_MAX_RADIUS = 100
+HOUGH_MAX_RADIUS = 300
 
 # Tracking/smoothing parameters to reduce frame-to-frame jitter.
 TRACK_LOCK_DISTANCE = 45

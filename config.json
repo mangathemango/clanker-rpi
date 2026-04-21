@@ -20,9 +20,9 @@
       "dp": 1,
       "minDist": 100,
       "param1": 100,
-      "param2": 60,
-      "minRadius": 20,
-      "maxRadius": 40
+      "param2": 40,
+      "minRadius": 120,
+      "maxRadius": 300
     },
     "preprocess": {
       "blur_kernel": 13,

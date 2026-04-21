@@ -50,6 +50,12 @@ def classify_color(hsv_img, x, y, r):
 
     return color
 
+def is_at_center():
+    v_conf = global_config["cv"]
+
+    
+
+
 
 # ---------------- CAMERA VERSION ----------------
 def run_camera(camera_index=1):

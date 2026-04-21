@@ -1,5 +1,6 @@
 import time
 from hardware import arduino, esp32
+from cv import qr_read, vision_ball, vision_place
 
 def grabProp():
     # Placeholder for grab prop action - define as needed
@@ -38,6 +39,22 @@ def execute_grabbing():
     time.sleep(2)
     arduino.OpenClaw()
 
+# def qr_read():
+#     string_instruction = qr_read.qr_data()
+
+def callibration_at_qr():
+    
+
+    while(string_instruction == None ):
+        string_instruction = qr_read.qr_data()
+        move_left()
+        string_instruction = qr_read.qr_data()
+        move_right()
+
+def callibration_at_mat():
+    
+
+
 def execute_config():
     """Execute the config sequence with direct function calls (same as grabbing)"""
     execute_grabbing()  # Since config.json has the same actionQueue as grabbing.json
@@ -72,6 +89,11 @@ def rotate_center(time_ds):
     move_motor(1, 100, time_ds)
     move_motor(2, -100, time_ds)
     move_motor(3, -100, time_ds)
+
+def move_left(time_ds):
+
+
+def move_right(time_ds):
     
 def main():
     esp32.set_angle(0)

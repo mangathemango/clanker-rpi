@@ -7,6 +7,7 @@ import dotenv
 # from cv.qr_read import qr_data
 import cv2
 from pyzbar.pyzbar import decode
+from cv.vision_place import get_chosen_circle_color_and_position
 
 def grabProp():
     # Placeholder for grab prop action - define as needed
@@ -45,8 +46,8 @@ def execute_grabbing():
     time.sleep(2)
     arduino.OpenClaw()
 
-# def qr_read():
-#     string_instruction = qr_read.qr_data()
+def qr_read():
+    string_instruction = qr_read.qr_data()
 
 def callibration_at_qr():
     
@@ -58,7 +59,7 @@ def callibration_at_qr():
         move_right()
 
 def callibration_at_mat():
-    
+    pass
 
 
 def execute_config():
@@ -342,7 +343,7 @@ def calibrate_place_zone_step(current_position, target_position = (344.6, 273.0)
             move_diagonal13(85, 4)
         if diff_y < 0:
             move_diagonal13(-85, 4)
-        return
+        return False
 
     if diff_x > -x_threshold and diff_x < x_threshold:
         print("X axis calibration complete")
@@ -351,10 +352,20 @@ def calibrate_place_zone_step(current_position, target_position = (344.6, 273.0)
             move_forward(4, speed=40)
         else:
             move_backward(4, speed=40)
-
+        return False
+    return True
 
 def main():
-    current_position = (343.5,275.4)
-    calibrate_place_zone_step(current_position, target_position=(344.6, 273.0))
+    for i in range(10):
+        output = get_chosen_circle_color_and_position(camera_index=0)
+        print(output)
+
+        color, position = output
+        if position == None or color == "NONE":
+            print("No position found")
+            break
+        x,y,_ = position
+        calibrate_place_zone_step((x,y))
+        time.sleep(0.5)
     pass
 

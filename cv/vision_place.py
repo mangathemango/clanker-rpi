@@ -109,7 +109,7 @@ def detect_color(hsv, mask):
     return color, counts
 
 
-def get_chosen_circle_color_and_position(camera_index=0, warmup_frames=5, sample_frames=12):
+def get_chosen_circle_color_and_position(camera_index=0, cap=None, warmup_frames=5, sample_frames=12):
     """
     Capture a short burst of frames and return the selected circle color and position.
 
@@ -117,7 +117,11 @@ def get_chosen_circle_color_and_position(camera_index=0, warmup_frames=5, sample
         (color, (x, y, r)) where position values are floats, or ("NONE", None)
         if no stable circle was found.
     """
-    cap = setup_camera(camera_index)
+    if cap is None:
+        cap = setup_camera(camera_index)
+        release_cap = True
+    else:
+        release_cap = False
     tracked_circle = None
     missed_frames = 0
     measurement_history = deque(maxlen=TRACK_MEDIAN_WINDOW)
@@ -200,7 +204,8 @@ def get_chosen_circle_color_and_position(camera_index=0, warmup_frames=5, sample
 
         return last_result
     finally:
-        cap.release()
+        if release_cap:
+            cap.release()
 
 def run_detector(camera_index=0):
     cap = setup_camera(camera_index)

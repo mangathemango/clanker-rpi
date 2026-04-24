@@ -1,73 +1,13 @@
 import time
 from hardware import arduino, esp32
 from hardware.esp32 import esp32_serial
-# from hardware.arduino import arduino_serial
+from hardware.arduino import arduino_serial
 arduino_serial = None
-import serial
-import dotenv
-# from cv.qr_read import qr_data
 import cv2
 from pyzbar.pyzbar import decode
 from cv.vision_place import get_chosen_circle_color_and_position
 import numpy as np
 from cv.line_guard import get_line_guard_state
-
-def grabProp():
-    # Placeholder for grab prop action - define as needed
-    print("Executing grabProp")
-
-def execute_putting():
-    import time
-    """Execute the putting sequence with direct function calls"""
-    # grabProp()
-    arduino.ResetArmMotorPosition()
-    esp32.set_angle(178)
-    time.sleep(7)
-    arduino.SetArmMotorPositionValue(1000)
-    time.sleep(2)
-    arduino.CloseClaw()
-    time.sleep(2)
-    esp32.set_angle(20)
-
-def execute_grabbing():
-    import time
-    """Execute the grabbing sequence with direct function calls"""
-    grabProp()
-    arduino.OpenClaw()
-    arduino.ResetArmMotorPosition()
-    # esp32.set_angle(20)
-    time.sleep(2)
-    arduino.SetArmMotorPositionValue(2290)
-    time.sleep(2)
-    arduino.CloseClaw()
-    time.sleep(2)
-    arduino.SetArmMotorPositionValue(2400)
-    time.sleep(2)
-    # esp32.set_angle(178)
-    time.sleep(2)
-    arduino.SetArmMotorPositionValue(1800)
-    time.sleep(2)
-    arduino.OpenClaw()
-
-def qr_read():
-    string_instruction = qr_read.qr_data()
-
-def callibration_at_qr():
-    
-
-    while(string_instruction == None ):
-        string_instruction = qr_read.qr_data()
-        move_left()
-        string_instruction = qr_read.qr_data()
-        move_right()
-
-def callibration_at_mat():
-    pass
-
-
-def execute_config():
-    """Execute the config sequence with direct function calls (same as grabbing)"""
-    execute_grabbing()  # Since config.json has the same actionQueue as grabbing.json
 
 def move_motor(motor, speed, time_ds):
     if speed < 0:
@@ -114,46 +54,17 @@ def move_right(time_ds, speed):
     move_motor(3, speed, time_ds)
     
 
-def put_material_above(index):
-    angle = 0
-    if index == 1:
-        angle = 89
-    if index == 2:
-        angle = 100
-    if index == 3:
-        angle = 113
-    arduino.OpenClaw()
-    esp32.set_angle(angle)
-    arduino.OpenClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(1800)
-    time.sleep(3)
-    arduino.CloseClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(2400)
-    time.sleep(3)
-    esp32.set_angle(54)
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(2000)
-    time.sleep(6)
-    arduino.OpenClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(2400)
-    time.sleep(5)
-    arduino.CloseClaw()
-
-
-
-
 
 
 def read_qr_code(cap=None):
+    release_flag = False
     if cap is None:
+        release_flag = True
         cap = cv2.VideoCapture(0)
 
     print("QR is scanning...")
 
-    Data = None;
+    data = None
 
 
     ret, img = cap.read()
@@ -164,15 +75,13 @@ def read_qr_code(cap=None):
     qr_codes = decode(img)
 
     if qr_codes:
-        Data = qr_codes[0].data.decode("utf-8")
+        data = qr_codes[0].data.decode("utf-8")
 
+    print(data)
 
-
-
-    cap.release()
-
-    print(Data)
-    return Data
+    if release_flag:
+        cap.release()
+    return data
 
 def initialise():
     arduino.ResetArmMotorPosition()
@@ -182,9 +91,6 @@ def initialise():
     time.sleep(1)
 
 
-
-def main_path():
-    initialise()
 
 def flag_1():
     esp32.set_angle(56)
@@ -282,11 +188,6 @@ def flag_8():
     time.sleep(2)
 
 
-def set_angle(angle):
-    global esp32_serial
-    #0xFF, 1, 0(servo_id), 0(set_angle), angle_arg
-    esp32_serial.write(bytes([0xFF, 1, 0, 0, angle]))
-
 
 def test():
     arduino.OpenClaw()
@@ -304,24 +205,6 @@ def test():
     time.sleep(1)
     set_angle(0)
     pass
-
-def reset_serials():
-    print("Resetting serials...")
-    global esp32_serial, arduino_serial
-    # esp32_serial.close()
-    # arduino_serial.close()
-    # time.sleep(2)
-    esp32_serial = serial.Serial(dotenv.get_key(".env", "ESP32_PORT"), 115200)
-    arduino_serial = serial.Serial(dotenv.get_key(".env", "ARDUINO_PORT"), 115200)
-    time.sleep(1)
-    print("Testing esp32_serial")
-    print(esp32_serial.read_all())
-    esp32_serial.write(bytes([]))
-    print("Testing arduino_serial")
-    print(arduino_serial.read_all())
-    arduino_serial.write(bytes([]))
-
-
 
 
 def calculate_dynamic_speed(distance, min_speed=50, max_speed=100, deadzone=5):
@@ -439,36 +322,13 @@ def calibrate_at_line(color="gray", orientation="straight", cap=None, distance=5
             break
         time.sleep(0.4)
 
-def put_material(index):
-    angle = 0
-    if index == 1:
-        angle = 89
-    if index == 2:
-        angle = 100
-    if index == 3:
-        angle = 113
-    arduino.OpenClaw()
-    esp32.set_angle(angle)
-    arduino.OpenClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(1800)
-    time.sleep(3)
-    arduino.CloseClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(2400)
-    time.sleep(3)
-    esp32.set_angle(54)
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(480)
-    time.sleep(6)
-    arduino.OpenClaw()
-    time.sleep(1)
-    arduino.SetArmMotorPositionValue(2400)
-    time.sleep(5)
-    arduino.CloseClaw()
+
+def main_path():
+    initialise()
+
 
 def main():
-    arduino.SetClawAngle(140)
+    esp32.set_angle(0)
 
 
     # flag_1()

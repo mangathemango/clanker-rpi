@@ -9,6 +9,8 @@ import dotenv
 import cv2
 from pyzbar.pyzbar import decode
 from cv.vision_place import get_chosen_circle_color_and_position
+import numpy as np
+from cv.line_guard import get_line_guard_state
 
 def grabProp():
     # Placeholder for grab prop action - define as needed
@@ -405,6 +407,37 @@ def calibrate_at_temp_zone(target_color="GREEN", cap=None):
             break
         time.sleep(0.4)
 
+def calibrate_at_line(color="gray", orientation="straight", cap=None, distance=50):
+    if cap is None:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    
+    for i in range(20):
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
+        
+        if boundary.x1 is None:
+            print("No line found")
+            continue
+        
+        avg_x = (boundary.x1 + boundary.x2) / 2
+        avg_y = (boundary.y1 + boundary.y2) / 2
+        
+        # Push away from the line: move perpendicular to the line
+        perp_angle = np.radians(angle + 90)
+        offset_x = distance * np.cos(perp_angle)
+        offset_y = distance * np.sin(perp_angle)
+        
+        target_x = avg_x + offset_x
+        target_y = avg_y + offset_y
+        
+        if calibrate_place_zone_step((avg_x, avg_y), (target_x, target_y)):
+            break
+        time.sleep(0.4)
 
 def put_material(index):
     angle = 0

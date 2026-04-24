@@ -1,7 +1,8 @@
 import time
 from hardware import arduino, esp32
 from hardware.esp32 import esp32_serial
-from hardware.arduino import arduino_serial
+# from hardware.arduino import arduino_serial
+arduino_serial = None
 import serial
 import dotenv
 # from cv.qr_read import qr_data
@@ -93,7 +94,7 @@ def move_diagonal24(speed, time_ds):
     time.sleep(time_ds / 10)
 
 def move_diagonal13(speed, time_ds):
-    move_motor(0, int(speed * 0.7), time_ds)
+    move_motor(0, int(speed * 0.9), time_ds)
     move_motor(2, int(speed * 0.9), time_ds)
     time.sleep(time_ds / 10)
 
@@ -183,38 +184,56 @@ def initialise():
 def main_path():
     initialise()
 
+def flag_1():
+    esp32.set_angle(56)
+    time.sleep(1)
     # #Flag 1
-    move_diagonal24(100, 19)
-    move_forward(10)
-    esp32.set_angle(150)
-    arduino.SetArmMotorPositionValue(1000)
+    move_diagonal24(100, 18)
+    move_forward(11)
+    esp32.set_angle(129)
+    # arduino.SetArmMotorPositionValue(1000)
     time.sleep(4)
     read_qr_code()
-    arduino.ResetArmMotorPosition()
+    # arduino.ResetArmMotorPosition()
     time.sleep(2)
-    move_diagonal13(100, 11)
+    esp32.set_angle(56)
     time.sleep(1)
-    move_forward(20)
+    move_diagonal13(100, 13)
+    time.sleep(1)
+    rotate_center(-100,2)
+    time.sleep(1)
+    move_forward(17)
     time.sleep(2)
 
+def flag_2():
+    esp32.set_angle(56)
+    time.sleep(1)
     # # #Flag 2
     move_backward(11)
     time.sleep(1)
     time.sleep(1)
-    rotate_center(60,15)
+    rotate_center(77,10)
     time.sleep(1)
-    move_forward(45)
+    move_forward(40)
     time.sleep(1)
-    rotate_center(-80,11)
+    rotate_center(-80,10)
+    time.sleep(2)
+    esp32.set_angle(0)
     time.sleep(2)
 
+def flag_3():
+    calibrate_at_temp_zone(target_color="GREEN")
+    esp32.set_angle(56)
+    time.sleep(1)
     # #Flag 3
     move_forward(21)
     time.sleep(1)
-    rotate_center(-80,10)
+    rotate_center(-75,10)
     move_forward(23)
     time.sleep(2)
+    esp32.set_angle(0)
 
+def flag_4():
     # # # #Flag 4
     move_forward(24)
     time.sleep(1)
@@ -223,6 +242,7 @@ def main_path():
     move_backward(14)
     time.sleep(1)
 
+def flag_5():
     #Flag 5
     move_backward(11)
     time.sleep(1)
@@ -233,6 +253,7 @@ def main_path():
     rotate_center(-80,11)
     time.sleep(2)
 
+def flag_6():
     # #Flag 6
     move_forward(21)
     time.sleep(1)
@@ -240,6 +261,7 @@ def main_path():
     move_forward(23)
     time.sleep(2)
 
+def flag_7():
     #Flag 7
     move_forward(25)
     time.sleep(1)
@@ -248,6 +270,7 @@ def main_path():
     move_backward(14)
     time.sleep(1)
 
+def flag_8():
     #Flag 8
     time.sleep(1)
     rotate_center(-80,18)
@@ -313,14 +336,14 @@ def calculate_dynamic_speed(distance, min_speed=50, max_speed=100, deadzone=5):
     return int(speed)
 
 
-def calibrate_place_zone_step(current_position, target_position = (344.6, 273.0)):
+def calibrate_place_zone_step(current_position, target_position = (344.6, 273.0), color="GREEN"):
     current_x, current_y = current_position
     target_x, target_y = target_position
     diff_x = current_x - target_x
     diff_y = current_y - target_y
 
-    y_threshold = 5
-    x_threshold = 5
+    y_threshold = 10
+    x_threshold = 10
 
     print(f"Diff X: {diff_x}, Diff Y: {diff_y}")
 
@@ -328,31 +351,42 @@ def calibrate_place_zone_step(current_position, target_position = (344.6, 273.0)
     dist_y = abs(diff_y)
     dist_x = abs(diff_x)
     
-    if diff_y > -y_threshold and diff_y < y_threshold:
-        print("Y axis calibration complete")
-    else:
-        speed_y = calculate_dynamic_speed(dist_y, min_speed=60, max_speed=100, deadzone=5)
-        direction_y = -1 if diff_y > 0 else 1
+    if diff_y < -y_threshold or diff_y > y_threshold:
+        if abs(diff_x) > abs(diff_y):
+            speed_x = calculate_dynamic_speed(dist_x, min_speed=30, max_speed=60, deadzone=5)
+            direction_x = 1 if diff_x > 0 else -1
+            if direction_x > 0:
+                move_forward(4, speed=speed_x)
+            else:
+                move_backward(4, speed=speed_x)
+            return False
+        speed_y = calculate_dynamic_speed(dist_y, min_speed=60, max_speed=75, deadzone=5)
+        direction_y = -1 if diff_y < 0 else 1
         move_diagonal13(direction_y * speed_y, 9)
         return False
     
-    if diff_x > -x_threshold and diff_x < x_threshold:
-        print("X axis calibration complete")
-    else:
-        speed_x = calculate_dynamic_speed(dist_x, min_speed=30, max_speed=70, deadzone=5)
+    print("Y axis calibration complete")
+    if diff_x < -x_threshold or diff_x > x_threshold:
+        speed_x = calculate_dynamic_speed(dist_x, min_speed=30, max_speed=60, deadzone=5)
         direction_x = 1 if diff_x > 0 else -1
-        if direction_x < 0:
+        if direction_x > 0:
             move_forward(4, speed=speed_x)
         else:
             move_backward(4, speed=speed_x)
         return False
-
+    print("X axis calibration complete")
     return True
 
-def calibrate_at_temp_zone():
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+def calibrate_at_temp_zone(target_color="GREEN", cap=None):
+    color_position = {
+        "RED": 500,
+        "GREEN": 0,
+        "BLUE": -500
+    }
+    if cap is None:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     for i in range(20):
         output = get_chosen_circle_color_and_position(cap=cap)
         if output == True:
@@ -362,8 +396,11 @@ def calibrate_at_temp_zone():
         color, position = output
         if position == None or color == "NONE":
             print("No position found")
-            break
+            position = (500,-500, 0)
+            color = target_color
         x,y,_ = position
+        if color != "UNKNOWN":
+            x += color_position[target_color] - color_position[color]
         if calibrate_place_zone_step((x,y)):
             break
         time.sleep(0.4)
@@ -398,7 +435,18 @@ def put_material(index):
     arduino.CloseClaw()
 
 def main():
-    # move_backward(100,5)
-    calibrate_at_temp_zone()
+    arduino.SetClawAngle(140)
+
+
+    # flag_1()
+    # flag_2()
+
+    # calibrate_at_temp_zone(target_color="GREEN")
+    # calibrate_at_temp_zone(target_color="RED")
+    # calibrate_at_temp_zone(target_color="BLUE")
+    # flag_3()
+    # calibrate_at_temp_zone(target_color="GREEN")
+    # calibrate_at_temp_zone(target_color="RED")
+    # calibrate_at_temp_zone(target_color="BLUE")
     pass
 

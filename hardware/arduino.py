@@ -22,3 +22,16 @@ def OpenClaw():
 def CloseClaw():
     global arduino_serial
     arduino_serial.write(bytes([0x22]))
+
+def SetClawAngle(angle):
+    global arduino_serial
+    arduino_serial.write(bytes([0x40, angle]))
+
+def SetDisplayText(text):
+    global arduino_serial
+    """Send task code text to display (e.g., '123+321' or '213+132')"""
+    arduino_serial.write(bytes([0x50]))  # Command byte for SetDisplayText
+    # Send each character followed by null terminator
+    for char in text:
+        arduino_serial.write(bytes([ord(char)]))
+    arduino_serial.write(bytes([0]))  # Null terminator

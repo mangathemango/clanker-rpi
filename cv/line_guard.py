@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 from collections import deque
+from dataclasses import dataclass
+from typing import Optional
 
 # ---------------- CONFIG ----------------
-CAMERA_INDEX = 1
+CAMERA_INDEX = 0
 
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
@@ -25,6 +27,14 @@ if USE_UNDISTORT:
 ANGLE_HISTORY = deque(maxlen=5)
 
 # ----------------------------------------
+
+
+@dataclass
+class BoundaryLine:
+    x1: Optional[int] = None
+    y1: Optional[int] = None
+    x2: Optional[int] = None
+    y2: Optional[int] = None
 
 
 def undistort_frame(frame):
@@ -64,22 +74,45 @@ def get_gray_mask(frame):
 
 
 # 🔥 NEW: extract boundary + fit line
-def get_boundary_line(mask, color):
+# orientation: straight=bottom-up, upside down=top-down, left=left-to-right, right=right-to-left
+def get_boundary_line(mask, orientation):
     h, w = mask.shape
 
     points = []
 
-    u = 0
-    if(color == "yellow"):
+    if orientation == "straight":
+        scan_axis = "col"
         u = -1
-    # scan each column → find FIRST yellow pixel (boundary) from bottom up
-    for x in range(0, w, 5):  # step=5 for speed + stability
-        column = mask[:, x]
-        ys = np.where(column > 0)[0]
+    elif orientation == "upside_down":
+        scan_axis = "col"
+        u = 0
+    elif orientation == "left":
+        scan_axis = "row"
+        u = 0
+    elif orientation == "right":
+        scan_axis = "row"
+        u = -1
+    else:
+        raise ValueError(f"Unknown orientation: {orientation}")
 
-        if len(ys) > 0:
-            y = ys[u]  # bottom-most boundary
-            points.append((x, y))
+    if scan_axis == "col":
+        # scan each column → find boundary from top or bottom
+        for x in range(0, w, 5):  # step=5 for speed + stability
+            column = mask[:, x]
+            ys = np.where(column > 0)[0]
+
+            if len(ys) > 0:
+                y = ys[u]
+                points.append((x, y))
+    else:
+        # scan each row → find boundary from left or right
+        for y in range(0, h, 5):  # step=5 for speed + stability
+            row = mask[y, :]
+            xs = np.where(row > 0)[0]
+
+            if len(xs) > 0:
+                x = xs[u]
+                points.append((x, y))
 
     if len(points) < 10:
         return None, None
@@ -90,6 +123,64 @@ def get_boundary_line(mask, color):
     vx, vy, x0, y0 = cv2.fitLine(pts, cv2.DIST_L2, 0, 0.01, 0.01)
 
     return (vx, vy, x0, y0), pts
+
+
+def get_region_grid(mask):
+    h, w = mask.shape
+    row_height = h // 3
+    col_width = w // 3
+
+    grid = []
+    for i in range(3):
+        row = []
+        for j in range(3):
+            start_row = i * row_height
+            end_row = (i + 1) * row_height if i < 2 else h
+            start_col = j * col_width
+            end_col = (j + 1) * col_width if j < 2 else w
+            region = mask[start_row:end_row, start_col:end_col]
+            row.append(cv2.countNonZero(region))
+        grid.append(row)
+
+    return grid
+
+
+def line_to_boundary(line):
+    vx, vy, x0, y0 = line
+    x1 = int(x0[0] - vx[0] * 1000)
+    y1 = int(y0[0] - vy[0] * 1000)
+    x2 = int(x0[0] + vx[0] * 1000)
+    y2 = int(y0[0] + vy[0] * 1000)
+    return BoundaryLine(x1=x1, y1=y1, x2=x2, y2=y2)
+
+
+def get_line_guard_state(frame, color="gray", orientation="straight"):
+    
+    """
+    param: \n
+    frame from cap.read() \n
+    colour = gray/yellow \n
+    orientation = straight/upside_down/leftright
+    """
+    if color == "yellow":
+        mask = get_yellow_mask(frame)
+    elif color == "gray":
+        mask = get_gray_mask(frame)
+    else:
+        raise ValueError(f"Unknown color: {color}")
+
+    pixels = get_region_grid(mask)
+    line, _ = get_boundary_line(mask, orientation)
+
+    if line is not None:
+        raw_angle = line_to_angle(line)
+        angle = smooth_angle(raw_angle)
+        boundary = line_to_boundary(line)
+    else:
+        angle = 0
+        boundary = BoundaryLine()
+
+    return angle, pixels, boundary
 
 
 # 🔥 NEW: convert line → angle
@@ -107,16 +198,26 @@ def smooth_angle(angle):
 
 def analyze_regions(mask):
     h, w = mask.shape
-
-    left = mask[:, :w // 3]
-    center = mask[:, w // 3:2 * w // 3]
-    right = mask[:, 2 * w // 3:]
-
-    return (
-        cv2.countNonZero(left),
-        cv2.countNonZero(center),
-        cv2.countNonZero(right),
-    )
+    row_height = h // 3
+    col_width = w // 3
+    
+    regions = []
+    for i in range(3):  # rows
+        for j in range(3):  # columns
+            start_row = i * row_height
+            end_row = (i + 1) * row_height if i < 2 else h
+            start_col = j * col_width
+            end_col = (j + 1) * col_width if j < 2 else w
+            region = mask[start_row:end_row, start_col:end_col]
+            count = cv2.countNonZero(region)
+            regions.append(count)
+    
+    # Aggregate into left, center, right (summing columns)
+    left = regions[0] + regions[3] + regions[6]  # top-left + mid-left + bottom-left
+    center = regions[1] + regions[4] + regions[7]  # top-center + mid-center + bottom-center
+    right = regions[2] + regions[5] + regions[8]  # top-right + mid-right + bottom-right
+    
+    return left, center, right
 
 
 def decide_action(left, center, right, angle):
@@ -153,27 +254,39 @@ def draw_line(frame, line):
     cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
 
 
-def draw_debug(frame, mask, action, left, center, right, angle):
+def draw_debug(frame, mask, action):
     h, w, _ = frame.shape
-
-    # draw region lines
+    
+    # Existing vertical lines
     cv2.line(frame, (w // 3, 0), (w // 3, h), (255, 0, 0), 2)
     cv2.line(frame, (2 * w // 3, 0), (2 * w // 3, h), (255, 0, 0), 2)
-
-    # display counts
-    cv2.putText(frame, f"L:{left}", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-    cv2.putText(frame, f"C:{center}", (w // 3 + 10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-    cv2.putText(frame, f"R:{right}", (2 * w // 3 + 10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-    cv2.putText(frame, f"Angle:{angle:.3f}", (w // 3 + 10, 60),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
-    # display action
-    cv2.putText(frame, f"Action: {action}", (10, h - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-
+    
+    # New horizontal lines for 3x3 grid
+    cv2.line(frame, (0, h // 3), (w, h // 3), (255, 0, 0), 2)
+    cv2.line(frame, (0, 2 * h // 3), (w, 2 * h // 3), (255, 0, 0), 2)
+    
+    # Optional: Display individual 9 region counts (compute regions here or pass as param)
+    # For brevity, assuming regions are computed similarly to analyze_regions
+    row_height = h // 3
+    col_width = w // 3
+    regions = []
+    for i in range(3):
+        for j in range(3):
+            start_row = i * row_height
+            end_row = (i + 1) * row_height if i < 2 else h
+            start_col = j * col_width
+            end_col = (j + 1) * col_width if j < 2 else w
+            region = mask[start_row:end_row, start_col:end_col]
+            count = cv2.countNonZero(region)
+            regions.append(count)
+            # Display each count in its region
+            text_x = start_col + 10
+            text_y = start_row + 30
+            cv2.putText(frame, f"{count}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+    
+    # Existing action display
+    cv2.putText(frame, f"Action: {action}", (10, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    
     cv2.imshow("Frame", frame)
     cv2.imshow("Mask", mask)
 
@@ -203,7 +316,7 @@ def run():
         left, center, right = analyze_regions(mask)
 
         # 🔥 boundary line detection
-        line, pts = get_boundary_line(mask, "gray")
+        line, pts = get_boundary_line(mask, "straight")
 
         if line is not None:
             raw_angle = line_to_angle(line)
@@ -218,7 +331,7 @@ def run():
 
         print(f"Angle:{angle:.2f} -> {action}")
 
-        draw_debug(frame, mask, action, left, center, right, angle)
+        draw_debug(frame, mask, action)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

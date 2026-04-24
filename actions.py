@@ -6,6 +6,10 @@ arduino_serial = None
 import cv2
 from pyzbar.pyzbar import decode
 from cv.vision_place import get_chosen_circle_color_and_position
+from cv.line_guard import get_line_guard_state
+
+def set_angle(degree):
+    esp32.set_angle(degree)
 import numpy as np
 from cv.line_guard import get_line_guard_state
 
@@ -54,6 +58,19 @@ def move_right(time_ds, speed):
     move_motor(3, speed, time_ds)
     
 
+def calibrate_position(cap, color, target_angle, tolerance=1, rotation_speed=50, steps=-1):
+    while steps != 0:
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read frame")
+            break
+        # angle, _, _ = get_line_guard_state(frame, color)
+        diff = target_angle - angle
+        if abs(diff) < tolerance:  # tolerance for angle matching
+            break
+        speed = rotation_speed if diff > 0 else -rotation_speed
+        rotate_center(speed, 1)  # small rotation step
+        steps -= 1
 
 
 def read_qr_code(cap=None):
@@ -92,29 +109,32 @@ def initialise():
 
 
 
+
 def flag_1():
-    esp32.set_angle(56)
+    arduino.SetArmMotorPositionValue(1320)
+    time.sleep(2)
+    esp32.set_angle(57)
     time.sleep(1)
     # #Flag 1
     move_diagonal24(100, 18)
-    move_forward(11)
+    move_forward(10)
     esp32.set_angle(129)
-    # arduino.SetArmMotorPositionValue(1000)
-    time.sleep(4)
+    arduino.SetArmMotorPositionValue(600)
     read_qr_code()
-    # arduino.ResetArmMotorPosition()
+    time.sleep(4)
+    arduino.SetArmMotorPositionValue(1320)
     time.sleep(2)
-    esp32.set_angle(56)
+    # esp32.set_angle(57)
     time.sleep(1)
-    move_diagonal13(100, 13)
+    move_diagonal13(100, 16)
+
+    return
     time.sleep(1)
-    rotate_center(-100,2)
-    time.sleep(1)
-    move_forward(17)
+    move_forward(16)
     time.sleep(2)
 
 def flag_2():
-    esp32.set_angle(56)
+    esp32.set_angle(57)
     time.sleep(1)
     # # #Flag 2
     move_backward(11)
@@ -131,7 +151,7 @@ def flag_2():
 
 def flag_3():
     calibrate_at_temp_zone(target_color="GREEN")
-    esp32.set_angle(56)
+    esp32.set_angle(57)
     time.sleep(1)
     # #Flag 3
     move_forward(21)
@@ -326,13 +346,18 @@ def calibrate_at_line(color="gray", orientation="straight", cap=None, distance=5
 def main_path():
     initialise()
 
+def soft_open():
+    arduino.SetClawAngle(150)
 
 def main():
-    esp32.set_angle(0)
-
-
-    # flag_1()
+    flag_1()
+    # cap = cv2.VideoCapture(8)
+    # time.sleep(2)
+    # arduino.SetArmMotorPositionValue(1320)
+    # for i in range(20):
+    #     read_qr_code(cap)
     # flag_2()
+    # arduino.CloseClaw()
 
     # calibrate_at_temp_zone(target_color="GREEN")
     # calibrate_at_temp_zone(target_color="RED")

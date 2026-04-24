@@ -17,18 +17,18 @@
       }
     },
     "hough": {
-      "dp": 1.2,
+      "dp": 1,
       "minDist": 100,
       "param1": 100,
-      "param2": 30,
-      "minRadius": 30,
-      "maxRadius": 80
+      "param2": 40,
+      "minRadius": 120,
+      "maxRadius": 300
     },
     "preprocess": {
-      "blur_kernel": 9,
-      "canny_threshold1": 100,
-      "canny_threshold2": 200,
-      "morph_kernel": 5
+      "blur_kernel": 13,
+      "canny_threshold1": 120,
+      "canny_threshold2": 250,
+      "morph_kernel": 8
     },
     "camera": {
       "width": 640,

@@ -6,18 +6,22 @@ esp32_serial = serial.Serial(dotenv.get_key(".env", "ESP32_PORT"), 115200)
 
 def set_target_speed(motor_id, speed):
     #0xFF 0 Motor_id 0 speed_arg
+    global esp32_serial
     esp32_serial.write(bytes([0xFF, 0, motor_id, 0, speed]))
     
 def set_ramp_time(motor_id, time):
     #0xFF 0 Motor_id 1 time_arg
+    global esp32_serial
     esp32_serial.write(bytes([0xFF, 0, motor_id, 1, time]))
     
 def start_move(motor_id, time):
     #0xFF 0 Motor_id 2 time_arg
+    global esp32_serial
     esp32_serial.write(bytes([0xFF, 0, motor_id, 2, time]))
     
 def set_angle(angle):
     #0xFF, 1, 0(servo_id), 0(set_angle), angle_arg
+    global esp32_serial
     esp32_serial.write(bytes([0xFF, 1, 0, 0, angle]))
 
 if __name__ == "__main__":

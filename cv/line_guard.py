@@ -10,10 +10,10 @@ CAMERA_INDEX = 0
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 
-YELLOW_LOWER = np.array([15, 10, 60])
+YELLOW_LOWER = np.array([15, 10, 50])
 YELLOW_UPPER = np.array([40, 80, 210])
-GRAY_LOWER = np.array([80, 10, 120])
-GRAY_UPPER = np.array([130, 80, 255])
+GRAY_LOWER = np.array([0, 0, 0])
+GRAY_UPPER = np.array([179, 36, 139])
 
 THRESH = 50000
 
@@ -311,7 +311,7 @@ def run():
 
         # frame = crop_center(undistorted)
 
-        mask = get_gray_mask(frame)
+        mask = get_yellow_mask(frame)
 
         left, center, right = analyze_regions(mask)
 

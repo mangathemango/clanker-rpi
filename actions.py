@@ -368,13 +368,22 @@ def calibrate_at_pickup_zone(target_color="GREEN", cap=None, step=40, tolerance=
             break
         time.sleep(0.2)
 
-def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
+def move_left_right(movespeed,time):
+    if movespeed > 0:
+        move_right(movespeed,time)
+    else:
+        move_left(abs(movespeed),time)
+
+
+def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, tolerance_px=85, cap=None, max_iters=20, move_speed=80, robot_orientation="right", random_move="right"):
     if cap is None:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     frame_center_y = center
+
+    stupid_movement_opposite_counter = 0
 
 
     for i in range(max_iters):
@@ -387,10 +396,21 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
 
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
-        if boundary.y1 is None:
+        if boundary.y1 is None and stupid_movement_opposite_counter < 5:
+            stupid_movement(random_move)
             print("No line found")
             time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
             continue
+        elif boundary.y1 is None and stupid_movement_opposite_counter >= 5:
+            stupid_movement(random_move, False)
+            print("No line found")
+            time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
+            continue
+
+        if stupid_movement_opposite_counter >= 10:
+            stupid_movement_opposite_counter = 0
 
         time.sleep(1)
         avg_y = (boundary.y1 + boundary.y2) / 2
@@ -399,15 +419,19 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
 
+        orientation_flag = 1
+        if (robot_orientation == "left"):
+            orientation_flag = -1
+
         if abs(error) <= tolerance_px and flag_position != 1:
             print("Line is centered in the frame")
             flag_position = 1
         elif error > 0 and flag_position != 1:
             print("Line is right of center, moving right")
-            move_right(move_speed, 5)
+            move_left_right(move_speed * orientation_flag, 5)
         elif error < 0 and flag_position != 1:
             print("Line is left of center, moving left")
-            move_left(move_speed, 5)
+            move_left_right(-move_speed * orientation_flag, 5)
         
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
@@ -436,13 +460,15 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
 
         time.sleep(0.2)
 
-def calibrate_angle(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, cap=None, max_iters=20, move_speed=80):
+def calibrate_angle(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, cap=None, max_iters=20, move_speed=80, random_move="right"):
     if cap is None:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     frame_center_y = center
+
+    stupid_movement_opposite_counter = 0
 
     for i in range(max_iters):
         flag_position = 0
@@ -454,10 +480,21 @@ def calibrate_angle(color="yellow", orientation="straight", center=240, angle_to
         
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
-        if boundary.y1 is None:
+        if boundary.y1 is None and stupid_movement_opposite_counter < 5:
+            stupid_movement(random_move)
             print("No line found")
             time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
             continue
+        elif boundary.y1 is None and stupid_movement_opposite_counter >= 5:
+            stupid_movement(random_move, False)
+            print("No line found")
+            time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
+            continue
+
+        if stupid_movement_opposite_counter >= 10:
+            stupid_movement_opposite_counter = 0
 
         time.sleep(1)
         avg_y = (boundary.y1 + boundary.y2) / 2
@@ -475,7 +512,24 @@ def calibrate_angle(color="yellow", orientation="straight", center=240, angle_to
 
         time.sleep(0.2)
 
-def calibrate_distance(color="yellow", orientation="straight", center=240, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
+def stupid_movement(move, opposite = False):
+    if opposite == False:
+        if move == "right":
+            move_right(80, 5)
+        else:
+            move_left(80, 5)
+        return
+    
+    if opposite == True:
+        if move == "left":
+            move_right(80, 5)
+        else:
+            move_left(80, 5)
+        return
+
+
+
+def calibrate_distance(color="yellow", orientation="straight", center=240, tolerance_px=85, cap=None, max_iters=20, move_speed=80, random_move="right", robot_orientation = "right"):
     if cap is None:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -483,9 +537,9 @@ def calibrate_distance(color="yellow", orientation="straight", center=240, toler
 
     frame_center_y = center
 
+    stupid_movement_opposite_counter = 0
 
     for i in range(max_iters):
-        flag_position = 0
         flag_angle = 0
         ret, frame = cap.read()
         if not ret:
@@ -494,10 +548,21 @@ def calibrate_distance(color="yellow", orientation="straight", center=240, toler
 
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
-        if boundary.y1 is None:
+        if boundary.y1 is None and stupid_movement_opposite_counter < 5:
+            stupid_movement(random_move)
             print("No line found")
             time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
             continue
+        elif boundary.y1 is None and stupid_movement_opposite_counter >= 5:
+            stupid_movement(random_move, False)
+            print("No line found")
+            time.sleep(0.2)
+            stupid_movement_opposite_counter += 1
+            continue
+
+        if stupid_movement_opposite_counter >= 10:
+            stupid_movement_opposite_counter = 0
 
         time.sleep(1)
         avg_y = (boundary.y1 + boundary.y2) / 2
@@ -506,15 +571,19 @@ def calibrate_distance(color="yellow", orientation="straight", center=240, toler
         print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
 
-        if abs(error) <= tolerance_px and flag_position != 1:
+        orientation_flag = 1
+        if (robot_orientation == "left"):
+            orientation_flag = -1
+
+        if abs(error) <= tolerance_px:
             print("Line is centered in the frame")
             break
-        elif error > 0 and flag_position != 1:
+        elif error > 0:
             print("Line is right of center, moving right")
-            move_right(move_speed, 5)
-        elif error < 0 and flag_position != 1:
+            move_left_right(move_speed * orientation_flag, 5)
+        elif error < 0:
             print("Line is left of center, moving left")
-            move_left(move_speed, 5)
+            move_left_right(-move_speed * orientation_flag, 5)
 
         time.sleep(0.2)
 
@@ -611,9 +680,9 @@ def do_temp_zone_routine():
 def main():
     esp32.set_angle(0)
     cap = cv2.VideoCapture(2)
+    print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # calibrate_at_line("yellow","straight", 240)
     # flag_1()
     # arduino.ResetArmMotorPosition()
-    # print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # cap = cv2.VideoCapture(0)
     pass

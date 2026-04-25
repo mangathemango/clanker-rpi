@@ -145,12 +145,19 @@ def get_region_grid(mask):
     return grid
 
 
-def line_to_boundary(line):
+def line_to_boundary(line, frame_width=FRAME_WIDTH, frame_height=FRAME_HEIGHT):
     vx, vy, x0, y0 = line
     x1 = int(x0[0] - vx[0] * 1000)
     y1 = int(y0[0] - vy[0] * 1000)
     x2 = int(x0[0] + vx[0] * 1000)
     y2 = int(y0[0] + vy[0] * 1000)
+    
+    # Clip to frame bounds so coordinates are usable
+    x1 = max(0, min(frame_width - 1, x1))
+    y1 = max(0, min(frame_height - 1, y1))
+    x2 = max(0, min(frame_width - 1, x2))
+    y2 = max(0, min(frame_height - 1, y2))
+    
     return BoundaryLine(x1=x1, y1=y1, x2=x2, y2=y2)
 
 

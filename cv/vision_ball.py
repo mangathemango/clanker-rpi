@@ -401,4 +401,5 @@ def run_detector(camera_index=0):
 
 
 if __name__ == "__main__":
-    run_detector(camera_index=0)
+    cap = setup_camera(camera_index=0)
+    print(get_chosen_circle_color_and_position(cap=cap))

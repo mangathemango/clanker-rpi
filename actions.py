@@ -15,6 +15,8 @@ def set_angle(degree):
 import numpy as np
 from cv.line_guard import get_line_guard_state
 
+
+print("yes")
 def move_motor(motor, speed, time_ds):
     if speed < 0:
         speed = (speed * -1) + 100

@@ -1,10 +1,13 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import config
 import importlib
 import actions
+import cv2
+import io
+from cv import line_guard
 
 
 
@@ -47,6 +50,19 @@ try:
         esp32.motor_set_speed(motor, speed)
 except Exception as e:
     print(e)
+
+@app.get("/getLineGuardFrame")
+def get_line_guard_frame(color: str = "gray", orientation: str = "straight", camera_index: int = 0):
+    frame = line_guard.get_line_guard_frame(color, orientation, camera_index)
+    if frame is None:
+        return JSONResponse({"error": "Could not capture frame"}, status_code=500)
+    
+    success, encoded_img = cv2.imencode('.png', frame)
+    if not success:
+        return JSONResponse({"error": "Could not encode image"}, status_code=500)
+    
+    img_bytes = encoded_img.tobytes()
+    return StreamingResponse(io.BytesIO(img_bytes), media_type="image/png")
 
 @app.get("/config")
 def get_config():

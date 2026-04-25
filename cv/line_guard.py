@@ -291,6 +291,78 @@ def draw_debug(frame, mask, action):
     cv2.imshow("Mask", mask)
 
 
+def draw_on_frame(frame, mask, action, line):
+    h, w, _ = frame.shape
+    
+    # Draw grid lines
+    cv2.line(frame, (w // 3, 0), (w // 3, h), (255, 0, 0), 2)
+    cv2.line(frame, (2 * w // 3, 0), (2 * w // 3, h), (255, 0, 0), 2)
+    cv2.line(frame, (0, h // 3), (w, h // 3), (255, 0, 0), 2)
+    cv2.line(frame, (0, 2 * h // 3), (w, 2 * h // 3), (255, 0, 0), 2)
+    
+    # Draw region counts
+    row_height = h // 3
+    col_width = w // 3
+    regions = []
+    for i in range(3):
+        for j in range(3):
+            start_row = i * row_height
+            end_row = (i + 1) * row_height if i < 2 else h
+            start_col = j * col_width
+            end_col = (j + 1) * col_width if j < 2 else w
+            region = mask[start_row:end_row, start_col:end_col]
+            count = cv2.countNonZero(region)
+            regions.append(count)
+            text_x = start_col + 10
+            text_y = start_row + 30
+            cv2.putText(frame, f"{count}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+    
+    # Draw action
+    cv2.putText(frame, f"Action: {action}", (10, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    
+    # Draw line if exists
+    if line is not None:
+        draw_line(frame, line)
+
+
+def get_line_guard_frame(color="gray", orientation="straight", camera_index=0):
+    cap = cv2.VideoCapture(camera_index)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+    
+    ret, frame = cap.read()
+    if not ret:
+        cap.release()
+        return None
+    
+    raw_frame, undistorted = undistort_frame(frame)
+    # frame = crop_center(undistorted)  # Uncomment if cropping is needed
+    
+    if color == "yellow":
+        mask = get_yellow_mask(frame)
+    elif color == "gray":
+        mask = get_gray_mask(frame)
+    else:
+        cap.release()
+        return None
+    
+    left, center, right = analyze_regions(mask)
+    line, pts = get_boundary_line(mask, orientation)
+    
+    if line is not None:
+        raw_angle = line_to_angle(line)
+        angle = smooth_angle(raw_angle)
+    else:
+        angle = 0
+    
+    action = decide_action(left, center, right, angle)
+    
+    draw_on_frame(frame, mask, action, line)
+    
+    cap.release()
+    return frame
+
+
 def run():
     cap = cv2.VideoCapture(CAMERA_INDEX)
 

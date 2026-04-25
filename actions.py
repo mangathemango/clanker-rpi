@@ -343,7 +343,7 @@ def calibrate_at_temp_zone(target_color="GREEN", cap=None, step=20, tolerance=10
             rotate_center(-100,1)
         time.sleep(0.2)
 
-def calibrate_at_line(color="yellow", orientation="straight", center=240, cap=None, tolerance_px=85, max_iters=20, move_speed=80, angle_tolerance=0.5):
+def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
     if cap is None:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -373,15 +373,15 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, cap=No
 
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
 
-        # if abs(error) <= tolerance_px and flag_position != 1:
-        #     print("Line is centered in the frame")
-        #     flag_position = 1
-        # elif error > 0 and flag_position != 1:
-        #     print("Line is right of center, moving right")
-        #     move_right(move_speed, 5)
-        # elif error < 0 and flag_position != 1:
-        #     print("Line is left of center, moving left")
-        #     move_left(move_speed, 5)
+        if abs(error) <= tolerance_px and flag_position != 1:
+            print("Line is centered in the frame")
+            flag_position = 1
+        elif error > 0 and flag_position != 1:
+            print("Line is right of center, moving right")
+            move_right(move_speed, 5)
+        elif error < 0 and flag_position != 1:
+            print("Line is left of center, moving left")
+            move_left(move_speed, 5)
         
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
@@ -398,7 +398,6 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, cap=No
         if abs(angle) <= angle_tolerance:
             print("angle aligned")
             flag_angle = 1
-            break
         elif angle > 0:
             rotate_center(-60,2)
         else:
@@ -410,8 +409,85 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, cap=No
 
         time.sleep(0.2)
 
+def calibrate_angle(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, cap=None, max_iters=20, move_speed=80):
+    if cap is None:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    frame_center_y = center
+
+    for i in range(max_iters):
+        flag_position = 0
+        flag_angle = 0
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read frame")
+            break
+        
+        angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
+
+        if boundary.y1 is None:
+            print("No line found")
+            time.sleep(0.2)
+            continue
+
+        time.sleep(1)
+        avg_y = (boundary.y1 + boundary.y2) / 2
+        error = avg_y - frame_center_y
+
+        print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
+        if abs(angle) <= angle_tolerance:
+            print("angle aligned")
+            break
+        elif angle > 0:
+            rotate_center(-60,2)
+        else:
+            rotate_center(60,2)
+
+        time.sleep(0.2)
+
+def calibrate_distance(color="yellow", orientation="straight", center=240, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
+    if cap is None:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    frame_center_y = center
 
 
+    for i in range(max_iters):
+        flag_position = 0
+        flag_angle = 0
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read frame")
+            break
+
+        angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
+
+        if boundary.y1 is None:
+            print("No line found")
+            time.sleep(0.2)
+            continue
+
+        time.sleep(1)
+        avg_y = (boundary.y1 + boundary.y2) / 2
+        error = avg_y - frame_center_y
+
+        print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
+
+        if abs(error) <= tolerance_px and flag_position != 1:
+            print("Line is centered in the frame")
+            break
+        elif error > 0 and flag_position != 1:
+            print("Line is right of center, moving right")
+            move_right(move_speed, 5)
+        elif error < 0 and flag_position != 1:
+            print("Line is left of center, moving left")
+            move_left(move_speed, 5)
+
+        time.sleep(0.2)
 
 def main_path():
     initialise()

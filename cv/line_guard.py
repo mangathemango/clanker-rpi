@@ -160,7 +160,7 @@ def get_line_guard_state(frame, color="gray", orientation="straight"):
     param: \n
     frame from cap.read() \n
     colour = gray/yellow \n
-    orientation = straight/upside_down/leftright
+    orientation = straight/upside_down/left/right
     """
     if color == "yellow":
         mask = get_yellow_mask(frame)

@@ -108,6 +108,105 @@ def detect_color(hsv, mask):
         return "UNKNOWN", counts
     return color, counts
 
+
+def get_chosen_circle_color_and_position(camera_index=0, cap=None, warmup_frames=5, sample_frames=12):
+    """
+    Capture a short burst of frames and return the selected circle color and position.
+
+    Returns:
+        (color, (x, y, r)) where position values are floats, or ("NONE", None)
+        if no stable circle was found.
+    """
+    if cap is None:
+        cap = setup_camera(camera_index)
+        release_cap = True
+    else:
+        release_cap = False
+    tracked_circle = None
+    missed_frames = 0
+    measurement_history = deque(maxlen=TRACK_MEDIAN_WINDOW)
+    last_result = ("NONE", None)
+
+    try:
+        total_frames = max(1, int(warmup_frames) + int(sample_frames))
+
+        for _ in range(total_frames):
+            ret, frame = cap.read()
+            if not ret:
+                continue
+
+            blurred = cv2.GaussianBlur(frame, (5, 5), 0)
+            gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+            circles = cv2.HoughCircles(
+                gray,
+                cv2.HOUGH_GRADIENT,
+                dp=HOUGH_DP,
+                minDist=HOUGH_MIN_DIST,
+                param1=HOUGH_PARAM1,
+                param2=HOUGH_PARAM2,
+                minRadius=HOUGH_MIN_RADIUS,
+                maxRadius=HOUGH_MAX_RADIUS
+            )
+
+            if circles is not None:
+                circles = np.uint16(np.around(circles))
+                selected_circle = None
+
+                if tracked_circle is not None:
+                    tx, ty, _ = tracked_circle
+                    nearby = [
+                        c for c in circles[0]
+                        if np.hypot(float(c[0]) - tx, float(c[1]) - ty) <= TRACK_LOCK_DISTANCE
+                    ]
+                    if nearby:
+                        selected_circle = min(nearby, key=lambda c: c[2])
+
+                if selected_circle is None:
+                    selected_circle = min(circles[0], key=lambda c: c[2])
+
+                x, y, r = map(float, selected_circle)
+                measurement_history.append((x, y, r))
+
+                med = np.median(np.array(measurement_history, dtype=np.float32), axis=0)
+                mx, my, mr = float(med[0]), float(med[1]), float(med[2])
+
+                if tracked_circle is None:
+                    tracked_circle = (mx, my, mr)
+                else:
+                    px, py, pr = tracked_circle
+                    dx = mx - px
+                    dy = my - py
+                    dr = mr - pr
+
+                    sx = px if abs(dx) < POSITION_DEADBAND_PX else (px + POSITION_SMOOTHING_ALPHA * dx)
+                    sy = py if abs(dy) < POSITION_DEADBAND_PX else (py + POSITION_SMOOTHING_ALPHA * dy)
+                    sr = pr if abs(dr) < RADIUS_DEADBAND_PX else (pr + RADIUS_SMOOTHING_ALPHA * dr)
+                    tracked_circle = (sx, sy, sr)
+
+                missed_frames = 0
+            else:
+                missed_frames += 1
+                if missed_frames > TRACK_MAX_MISSES:
+                    tracked_circle = None
+                    measurement_history.clear()
+
+            if tracked_circle is not None:
+                x, y, r = tracked_circle
+                xi, yi, ri = int(round(x)), int(round(y)), int(round(r))
+
+                mask = np.zeros(gray.shape, dtype=np.uint8)
+                cv2.circle(mask, (xi, yi), ri, 255, -1)
+                color, _ = detect_color(hsv, mask)
+
+                last_result = (color, (x, y, r))
+
+        return last_result
+    finally:
+        if release_cap:
+            cap.release()
+
 def run_detector(camera_index=0):
     cap = setup_camera(camera_index)
     tracked_circle = None  # (x, y, r) as floats

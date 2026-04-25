@@ -1,8 +1,8 @@
 const fs = require('fs');
 const axios = require('axios');
 
-async function getLineGuardFrame(color = 'gray', orientation = 'straight', camera_index = 0) {
-    const url = `http://100.71.55.8:8000getLineGuardFrame?color=${color}&orientation=${orientation}&camera_index=${camera_index}`;
+async function getLineGuardFrame(color = 'gray', orientation = 'straight', camera_index = 2) {
+    const url = `http://100.71.55.8:8000/getLineGuardFrame?color=${color}&orientation=${orientation}&camera_index=${camera_index}`;
 
     try {
         const response = await axios.get(url, { responseType: 'arraybuffer' });

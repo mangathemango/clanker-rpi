@@ -1,0 +1,22 @@
+{
+  "name": "temp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "getLineGuardFrame.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mangathemango/clanker-rpi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mangathemango/clanker-rpi/issues"
+  },
+  "homepage": "https://github.com/mangathemango/clanker-rpi#readme",
+  "dependencies": {
+    "axios": "^1.15.2"
+  }
+}

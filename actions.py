@@ -732,7 +732,8 @@ def wait_and_pick_up(cap, target_color="GREEN"):
     
 
 def main():
-
+    esp32.set_angle(0)
+    return
     cap = vision_ball.setup_camera(2)
     qr_data = "123"
     colors = {

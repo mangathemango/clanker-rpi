@@ -371,6 +371,7 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         avg_y = (boundary.y1 + boundary.y2) / 2
         error = avg_y - frame_center_y
 
+        print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
 
         if abs(error) <= tolerance_px and flag_position != 1:
@@ -394,6 +395,7 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         avg_y = (boundary.y1 + boundary.y2) / 2
         error = avg_y - frame_center_y
 
+        print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
         if abs(angle) <= angle_tolerance:
             print("angle aligned")
@@ -436,6 +438,7 @@ def calibrate_angle(color="yellow", orientation="straight", center=240, angle_to
         avg_y = (boundary.y1 + boundary.y2) / 2
         error = avg_y - frame_center_y
 
+        print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
         if abs(angle) <= angle_tolerance:
             print("angle aligned")
@@ -475,6 +478,7 @@ def calibrate_distance(color="yellow", orientation="straight", center=240, toler
         avg_y = (boundary.y1 + boundary.y2) / 2
         error = avg_y - frame_center_y
 
+        print(f"Line position {avg_y:.1f}")
         print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
 
         if abs(error) <= tolerance_px and flag_position != 1:

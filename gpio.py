@@ -1,48 +1,48 @@
 import RPi.GPIO as GPIO
-import threading
+import multiprocessing as mp
 import time
-import actions
+import os
 
 PIN = 3
 
-# Thread control
-worker_thread = None
-stop_event = threading.Event()
+process = None
+running = False
 
 def worker():
-    print("Worker thread started")
-    while not stop_event.is_set():
-        print("Running task...")
+    print(f"Worker process started (PID: {os.getpid()})")
+    while True:
+        print("Doing heavy stuff...")
         time.sleep(1)
-    print("Worker thread stopping")
 
-def toggle_thread(channel):
-    global worker_thread, stop_event
+def toggle(channel):
+    global process, running
 
-    if worker_thread is None or not worker_thread.is_alive():
-        print("Starting thread")
-        stop_event.clear()
-        worker_thread = threading.Thread(target=worker)
-        worker_thread.start()
+    if not running:
+        print("START (spawning process)")
+        process = mp.Process(target=worker)
+        process.start()
+        running = True
     else:
-        print("Stopping thread")
-        stop_event.set()
-        worker_thread.join()
-        worker_thread = None
+        print("STOP (terminating process NOW)")
+        process.terminate()   # 💀 instant kill
+        process.join()
+        running = False
 
 # Setup
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-# Detect FALLING edge (HIGH -> LOW when connected to GND)
-GPIO.add_event_detect(PIN, GPIO.FALLING, callback=toggle_thread, bouncetime=300)
+GPIO.add_event_detect(PIN, GPIO.FALLING, callback=toggle, bouncetime=300)
 
-print("Listening on GPIO3... (Ctrl+C to exit)")
+print("Ready. Press signal to toggle.")
 
 try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
-    print("Cleaning up...")
+    pass
 finally:
+    if process is not None and process.is_alive():
+        process.terminate()
+        process.join()
     GPIO.cleanup()

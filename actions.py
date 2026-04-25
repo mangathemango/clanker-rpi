@@ -6,7 +6,8 @@ from hardware.arduino import arduino_serial
 arduino_serial = None
 import cv2
 from pyzbar.pyzbar import decode
-from cv.vision_place import get_chosen_circle_color_and_position
+from cv import vision_ball
+from cv import vision_place
 from cv.line_guard import get_line_guard_state
 from pprint import pprint
 def set_angle(degree):
@@ -175,7 +176,7 @@ def flag_2():
     time.sleep(2)
 
 def flag_3():
-    calibrate_at_temp_zone(target_color="GREEN")
+    calibrate_at_place_zone(target_color="GREEN")
     esp32.set_angle(57)
     time.sleep(1)
     # #Flag 3
@@ -307,7 +308,7 @@ def calibrate_place_zone_step(current_position, target_position=(320, 273.0), co
     print("X axis calibration complete")
     return True
 
-def calibrate_at_temp_zone(target_color="GREEN", cap=None, step=20, tolerance=10):
+def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=10):
     color_position = {
         "RED": 500,
         "GREEN": 0,
@@ -318,7 +319,7 @@ def calibrate_at_temp_zone(target_color="GREEN", cap=None, step=20, tolerance=10
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     for _ in range(step):
-        output = get_chosen_circle_color_and_position(cap=cap)
+        output = vision_place.get_chosen_circle_color_and_position(cap=cap)
         if output == True:
             break
         print(output)
@@ -341,6 +342,30 @@ def calibrate_at_temp_zone(target_color="GREEN", cap=None, step=20, tolerance=10
             rotate_center(100,1)
         if angle > 70 or angle < -5:
             rotate_center(-100,1)
+        time.sleep(0.2)
+
+def calibrate_at_pickup_zone(target_color="GREEN", cap=None, step=40, tolerance=30):
+    color_position = {
+        "RED": 500,
+        "GREEN": 0,
+        "BLUE": -500
+    }
+    if cap is None:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    for _ in range(step):
+        material_is_in_vision = vision_ball.get_chosen_circle_color_and_position(cap=cap) != ("NONE", None)
+        print((color, position))
+        _, stable_position = vision_ball.get_chosen_circle_color_and_position_stable(cap=cap)
+        if not material_is_in_vision:
+            print("No position found")
+            position = (500,-500, 0)
+            color = target_color
+        x,y,_ = stable_position
+        
+        if calibrate_place_zone_step((x,y), tolerance = tolerance):
+            break
         time.sleep(0.2)
 
 def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
@@ -569,22 +594,22 @@ def pick_up_material():
 
 def do_temp_zone_routine():
     esp32.set_angle(0)
-    calibrate_at_temp_zone(target_color="GREEN")
+    calibrate_at_place_zone(target_color="GREEN")
     pick_material_from_storage_1()
     place_material()
-    calibrate_at_temp_zone(target_color="RED")
+    calibrate_at_place_zone(target_color="RED")
     pick_material_from_storage_2()
     place_material()
-    calibrate_at_temp_zone(target_color="BLUE")
+    calibrate_at_place_zone(target_color="BLUE")
     pick_material_from_storage_3()
     place_material()
 
 def main():
+    esp32.set_angle(0)
+    cap = cv2.VideoCapture(2)
     # calibrate_at_line("yellow","straight", 240)
     # flag_1()
-    esp32.set_angle(0)
-    # return
     # arduino.ResetArmMotorPosition()
-
+    # print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # cap = cv2.VideoCapture(0)
     pass

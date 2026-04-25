@@ -315,7 +315,7 @@ def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=1
         "BLUE": -500
     }
     if cap is None:
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(2)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     for _ in range(step):
@@ -344,12 +344,7 @@ def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=1
             rotate_center(-100,1)
         time.sleep(0.2)
 
-def calibrate_at_pickup_zone(target_color="GREEN", cap=None, step=40, tolerance=30):
-    color_position = {
-        "RED": 500,
-        "GREEN": 0,
-        "BLUE": -500
-    }
+def calibrate_at_pickup_zone(cap=None, step=40, tolerance=30):
     if cap is None:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -645,6 +640,34 @@ def put_material_into_storage_1():
     arduino.SetArmMotorPositionValue(1320)
     time.sleep(3)
 
+def put_material_into_storage_2():
+    esp32.set_angle(58)
+    # return
+    close_claw()
+    time.sleep(1)
+    arduino.SetArmMotorPositionValue(1050)
+    # return
+    time.sleep(1)
+    esp32.set_angle(60)
+    soft_open_claw()
+    time.sleep(1)
+    arduino.SetArmMotorPositionValue(1320)
+    time.sleep(3)
+
+def put_material_into_storage_3():
+    esp32.set_angle(70)
+
+    close_claw()
+    time.sleep(1)
+    arduino.SetArmMotorPositionValue(1050)
+    # return
+    time.sleep(1)
+    esp32.set_angle(73)
+    soft_open_claw()
+    time.sleep(1)
+    arduino.SetArmMotorPositionValue(1320)
+    time.sleep(3)
+
 def place_material():
     esp32.set_angle(0)
     time.sleep(1)
@@ -667,22 +690,41 @@ def pick_up_material():
 
 def do_temp_zone_routine():
     esp32.set_angle(0)
-    calibrate_at_place_zone(target_color="GREEN")
+    calibrate_at_place_zone(target_color="RED")
     pick_material_from_storage_1()
     place_material()
-    calibrate_at_place_zone(target_color="RED")
+    calibrate_at_place_zone(target_color="GREEN")
     pick_material_from_storage_2()
     place_material()
     calibrate_at_place_zone(target_color="BLUE")
     pick_material_from_storage_3()
     place_material()
 
+def pick_up_material_from_pickup_zone():
+    close_claw()
+    arduino.SetArmMotorPositionValue(1320)
+    time.sleep(1)
+
+    
+
+def put_shit():
+    arduino.SetArmMotorPositionValue(1200)
+    esp32.set_angle(127)
+    arduino.OpenClaw()
+    if vision_ball.get_chosen_color_and_position_stable(camera_index=2, stable_time=0.2):
+        pick_up_material_from_pickup_zone()
+        put_material_into_storage_1()
+        
+    
+
 def main():
-    esp32.set_angle(0)
-    cap = cv2.VideoCapture(2)
+    for i in range(3):
+        put_shit()
+    # calibrate_at_pickup_zone()
     print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # calibrate_at_line("yellow","straight", 240)
     # flag_1()
     # arduino.ResetArmMotorPosition()
+    # do_temp_zone_routine()
     # cap = cv2.VideoCapture(0)
     pass

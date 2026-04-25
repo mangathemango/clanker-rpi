@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 from collections import deque
 
 LOWER_RED1 = np.array([0, 120, 120])
@@ -9,6 +10,7 @@ UPPER_RED2 = np.array([180, 255, 255])
 
 LOWER_GREEN = np.array([40, 50, 50])
 UPPER_GREEN = np.array([90, 255, 255])
+
 
 LOWER_BLUE = np.array([100, 100, 60])
 UPPER_BLUE = np.array([130, 255, 255])
@@ -20,7 +22,7 @@ HOUGH_MIN_DIST = 80
 HOUGH_PARAM1 = 100
 HOUGH_PARAM2 = 80
 HOUGH_MIN_RADIUS = 20
-HOUGH_MAX_RADIUS = 450
+HOUGH_MAX_RADIUS = 500
 
 # Tracking/smoothing parameters to reduce frame-to-frame jitter.
 TRACK_LOCK_DISTANCE = 45
@@ -207,8 +209,68 @@ def get_chosen_circle_color_and_position(camera_index=0, cap=None, warmup_frames
         if release_cap:
             cap.release()
 
+
+def get_chosen_color_and_position_stable(camera_index=0, cap=None, stable_time=0.75,
+                                         warmup_frames=5, sample_frames=12,
+                                         position_tolerance_px=10.0, radius_tolerance_px=10.0):
+    """Return the material color and position only after it stays stable for stable_time seconds."""
+    if cap is None:
+        cap = setup_camera(camera_index)
+        release_cap = True
+    else:
+        release_cap = False
+
+    stable_started_at = None
+    stable_color_position = ("NONE", None)
+    previous_position = None
+
+    try:
+        while True:
+            color, position = get_chosen_circle_color_and_position(
+                camera_index=camera_index,
+                cap=cap,
+                warmup_frames=warmup_frames,
+                sample_frames=sample_frames,
+            )
+
+            if position is None or color == "NONE":
+                stable_started_at = None
+                previous_position = None
+                continue
+
+            current_time = time.monotonic()
+            if previous_position is not None:
+                px, py, pr = previous_position
+                cx, cy, cr = position
+                if (
+                    np.hypot(cx - px, cy - py) > position_tolerance_px
+                    or abs(cr - pr) > radius_tolerance_px
+                ):
+                    stable_started_at = current_time
+                    stable_color_position = (color, position)
+                    previous_position = position
+                    continue
+
+            if stable_started_at is None:
+                stable_started_at = current_time
+                stable_color_position = (color, position)
+            elif current_time - stable_started_at >= float(stable_time):
+                return stable_color_position
+
+            previous_position = position
+    finally:
+        if release_cap:
+            cap.release()
+
 def run_detector(camera_index=0):
     cap = setup_camera(camera_index)
+
+    stable_color, stable_position = get_chosen_color_and_position_stable(
+        camera_index=0,
+        cap=cap,
+    )
+    print(f"Stable detection: color={stable_color}, position={stable_position}")
+
     tracked_circle = None  # (x, y, r) as floats
     missed_frames = 0
     measurement_history = deque(maxlen=TRACK_MEDIAN_WINDOW)
@@ -317,6 +379,8 @@ def run_detector(camera_index=0):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
         # --- Show multiple windows ---
+        green_mask = cv2.inRange(hsv, LOWER_GREEN, UPPER_GREEN)
+        cv2.imshow("Green mask", green_mask)
         cv2.imshow("Final Output", frame)
         cv2.imshow("Blurred", blurred)
         cv2.imshow("Grayscale", gray_vis)
@@ -340,4 +404,4 @@ def run_detector(camera_index=0):
 
 
 if __name__ == "__main__":
-    run_detector(camera_index=0)
+    run_detector(0)

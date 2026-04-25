@@ -2,7 +2,7 @@ import serial
 import time
 import dotenv
 
-esp32_serial = serial.Serial(dotenv.get_key(".env", "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0"), 115200)
+esp32_serial = serial.Serial("/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0", 115200)
 
 def set_target_speed(motor_id, speed):
     #0xFF 0 Motor_id 0 speed_arg

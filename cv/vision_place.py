@@ -73,6 +73,8 @@ def build_status_panel(frame_shape, circles_count, selected_color, selected_coun
     ]
 
     y = 70
+
+
     for line in lines:
         color = text_color if line else muted_color
         cv2.putText(panel, line, (18, y),
@@ -340,4 +342,4 @@ def run_detector(camera_index=0):
 
 
 if __name__ == "__main__":
-    run_detector(camera_index=0)
+    run_detector(camera_index=1)

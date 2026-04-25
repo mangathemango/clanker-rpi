@@ -8,7 +8,7 @@ UPPER_RED1 = np.array([10, 255, 255])
 LOWER_RED2 = np.array([150, 120, 120])
 UPPER_RED2 = np.array([180, 255, 255])
 
-LOWER_GREEN = np.array([20, 40, 40])
+LOWER_GREEN = np.array([0, 0, 0])
 UPPER_GREEN = np.array([100, 255, 255])
 
 LOWER_BLUE = np.array([100, 100, 60])

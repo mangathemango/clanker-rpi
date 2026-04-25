@@ -8,8 +8,9 @@ UPPER_RED1 = np.array([10, 255, 255])
 LOWER_RED2 = np.array([150, 120, 120])
 UPPER_RED2 = np.array([180, 255, 255])
 
-LOWER_GREEN = np.array([0, 0, 0])
-UPPER_GREEN = np.array([100, 255, 255])
+LOWER_GREEN = np.array([40, 50, 50])
+UPPER_GREEN = np.array([90, 255, 255])
+
 
 LOWER_BLUE = np.array([100, 100, 60])
 UPPER_BLUE = np.array([130, 255, 255])
@@ -21,7 +22,7 @@ HOUGH_MIN_DIST = 80
 HOUGH_PARAM1 = 100
 HOUGH_PARAM2 = 80
 HOUGH_MIN_RADIUS = 20
-HOUGH_MAX_RADIUS = 450
+HOUGH_MAX_RADIUS = 500
 
 # Tracking/smoothing parameters to reduce frame-to-frame jitter.
 TRACK_LOCK_DISTANCE = 45
@@ -378,6 +379,8 @@ def run_detector(camera_index=0):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
         # --- Show multiple windows ---
+        green_mask = cv2.inRange(hsv, LOWER_GREEN, UPPER_GREEN)
+        cv2.imshow("Green mask", green_mask)
         cv2.imshow("Final Output", frame)
         cv2.imshow("Blurred", blurred)
         cv2.imshow("Grayscale", gray_vis)
@@ -401,5 +404,4 @@ def run_detector(camera_index=0):
 
 
 if __name__ == "__main__":
-    cap = setup_camera(camera_index=0)
-    print(get_chosen_circle_color_and_position(cap=cap))
+    run_detector(0)

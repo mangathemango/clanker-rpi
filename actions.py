@@ -148,7 +148,7 @@ def flag_1():
     esp32.set_angle(57)
     time.sleep(1)
     # #Flag 1
-    move_diagonal24(100, 17)
+    move_diagonal24(100, 15)
     move_forward(100, 13)
     qr_data = read_qr_code()
 
@@ -164,9 +164,9 @@ def flag_2():
     # # #Flag 2
     move_backward(100, 11)
     time.sleep(1)
-    rotate_center(77,10)
+    rotate_center(77,11)
     move_forward(100, 15)
-    rotate_center(100, 2)
+    rotate_center(100, 1)
     move_forward(100, 15)
     rotate_center(100, 2)
     move_forward(100, 20)
@@ -311,7 +311,7 @@ def calibrate_place_zone_step(current_position, target_position=(320, 273.0), co
     print("X axis calibration complete")
     return True
 
-def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=10):
+def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=10, top_flag=False):
     color_position = {
         "RED": 500,
         "GREEN": 0,
@@ -322,7 +322,10 @@ def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=1
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     for _ in range(step):
-        output = vision_place.get_chosen_circle_color_and_position(cap=cap)
+        if top_flag:
+            output = vision_ball.get_chosen_circle_color_and_position(cap=cap)
+        else:
+            output = vision_place.get_chosen_circle_color_and_position(cap=cap)
         if output == True:
             break
         print(output)
@@ -337,14 +340,6 @@ def calibrate_at_place_zone(target_color="GREEN", cap=None, step=20, tolerance=1
             x += color_position[target_color] - color_position[color]
         if calibrate_place_zone_step((x,y), tolerance = tolerance):
             break
-        _, frame = cap.read()
-        line_guard_state = get_line_guard_state(frame, color="gray")
-        angle, _, _ = line_guard_state
-        pprint(angle)
-        if angle < 30 and  angle > 5:
-            rotate_center(100,1)
-        if angle > 70 or angle < -5:
-            rotate_center(-100,1)
         time.sleep(0.2)
 
 def calibrate_at_pickup_zone(cap=None, step=40, tolerance=40):
@@ -352,30 +347,39 @@ def calibrate_at_pickup_zone(cap=None, step=40, tolerance=40):
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    zigzag_flag = True
     for i in range(step):
-        for j in range(3):
+        for j in range(4):
             color, position = vision_ball.get_chosen_circle_color_and_position(cap=cap) 
             print((color,position))
-            if color != "NONE":
+            if color != "NONE" and color != "UNKNOWN":
+                zigzag_flag = False
                 break
         # _, stable_position = vision_ball.get_chosen_circle_color_and_position_stable(cap=cap)
-        if color == "NONE":
+        if color == "NONE" and zigzag_flag:
             print("No position found")
-            if i%4 == 0:
-                move_diagonal24(-100,3)
+            if i%2 == 0:
+                move_diagonal13(100,6)
             else:
-                move_diagonal13(100,3)
+                move_diagonal24(-100,4)
             continue
         x,y,_ = position
         
-        if calibrate_place_zone_step((x,y), target_position=(343.3, 205.0),tolerance = tolerance, base_direction=-1):
+        if calibrate_place_zone_step((x,y), target_position=(343.3, 205.0),tolerance = tolerance, base_direction=-1, min_speed=35, max_speed=45):
             break
         time.sleep(0.2)
 
 
-def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_tolerance=2, tolerance_px=85, cap=None, max_iters=20, move_speed=80):
+def move_left_right(movespeed,time):
+
+    if movespeed > 0:
+        move_right(movespeed,time)
+    else:
+        move_left(abs(movespeed),time)
+
+def calibrate_at_line(color="yellow", orientation="straight", center=200, angle_tolerance=20, tolerance_px=85, cap=None, max_iters=20, move_speed=100, robot_orientation="right", random_move="right"):
     if cap is None:
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(2)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
@@ -394,21 +398,21 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
-        if boundary.y1 is None and stupid_movement_opposite_counter < 5:
-            stupid_movement(random_move)
-            print("No line found")
-            time.sleep(0.2)
-            stupid_movement_opposite_counter += 1
-            continue
-        elif boundary.y1 is None and stupid_movement_opposite_counter >= 5:
-            stupid_movement(random_move, False)
-            print("No line found")
-            time.sleep(0.2)
-            stupid_movement_opposite_counter += 1
-            continue
+        # if boundary.y1 is None and stupid_movement_opposite_counter < 5:
+        #     stupid_movement(random_move)
+        #     print("No line found")
+        #     time.sleep(0.2)
+        #     stupid_movement_opposite_counter += 1
+        #     continue
+        # elif boundary.y1 is None and stupid_movement_opposite_counter >= 5:
+        #     stupid_movement(random_move, False)
+        #     print("No line found")
+        #     time.sleep(0.2)
+        #     stupid_movement_opposite_counter += 1
+        #     continue
 
-        if stupid_movement_opposite_counter >= 10:
-            stupid_movement_opposite_counter = 0
+        # if stupid_movement_opposite_counter >= 10:
+        #     stupid_movement_opposite_counter = 0
 
         time.sleep(1)
         avg_y = (boundary.y1 + boundary.y2) / 2
@@ -421,16 +425,20 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         if (robot_orientation == "left"):
             orientation_flag = -1
 
-        if abs(error) <= tolerance_px and flag_position != 1:
+        if abs(error) <= tolerance_px:
             print("Line is centered in the frame")
             flag_position = 1
-        elif error > 0 and flag_position != 1:
-            print("Line is right of center, moving right")
-            move_left_right(move_speed * orientation_flag, 5)
-        elif error < 0 and flag_position != 1:
-            print("Line is left of center, moving left")
-            move_left_right(-move_speed * orientation_flag, 5)
+
+        if flag_position != 1:
+            if error > 0:
+                print("Line is right of center, moving right")
+                move_left_right(move_speed * orientation_flag, 5)
+            elif error < 0:
+                print("Line is left of center, moving left")
+                move_left_right(-move_speed * orientation_flag, 5)
         
+        
+        time.sleep(2)
         angle, pixels, boundary = get_line_guard_state(frame, color, orientation)
 
         if boundary.y1 is None:
@@ -438,16 +446,16 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
             time.sleep(0.2)
             continue
 
-        time.sleep(1)
         avg_y = (boundary.y1 + boundary.y2) / 2
         error = avg_y - frame_center_y
 
         print(f"Line position {avg_y:.1f}")
-        print(f"Line center error: {error:.1f}px, angle: {angle:.1f}")
-        if abs(angle) <= angle_tolerance:
+        print(f"Boundary y1: {boundary.y1:.1f}, boundary y2: {boundary.y2:.1f}, angle: {angle:.1f}")
+        diff_y = boundary.y1-boundary.y2
+        if abs(diff_y) <= 40:
             print("angle aligned")
             flag_angle = 1
-        elif angle > 0:
+        elif diff_y > 0:
             rotate_center(-60,2)
         else:
             rotate_center(60,2)
@@ -455,8 +463,6 @@ def calibrate_at_line(color="yellow", orientation="straight", center=240, angle_
         if flag_angle and flag_position == 1:
             print("calibration complete")
             break
-
-        time.sleep(1)
 
 def calibrate_angle(color="yellow", orientation="straight", center=240, angle_tolerance=0.5, cap=None, max_iters=20, move_speed=80, random_move="right"):
     if cap is None:
@@ -612,11 +618,11 @@ def pick_material_from_storage_1():
 
 def pick_material_from_storage_2():
     soft_open_claw()
-    esp32.set_angle(51)
+    esp32.set_angle(52)
     time.sleep(2)
     arduino.SetArmMotorPositionValue(1050)
     time.sleep(1)
-    esp32.set_angle(53)
+    esp32.set_angle(56)
     time.sleep(1)
     close_claw()
     time.sleep(1)
@@ -646,15 +652,19 @@ def put_material_into_storage_1():
     arduino.SetArmMotorPositionValue(1320)
     time.sleep(0.5)
 
-def put_material_into_storage_2():
-    esp32.set_angle(58)
+def put_material_into_storage_2(arm_orientation="right"):
+    if arm_orientation == "right":
+        esp32.set_angle(58)
+    else:
+        esp32.set_angle(57)
     # return
     close_claw()
     time.sleep(1)
     arduino.SetArmMotorPositionValue(1050)
     # return
     time.sleep(1)
-    esp32.set_angle(60)
+    if arm_orientation == "right":
+        esp32.set_angle(60)
     soft_open_claw()
     time.sleep(1)
     arduino.SetArmMotorPositionValue(1320)
@@ -665,7 +675,7 @@ def put_material_into_storage_3():
 
     close_claw()
     time.sleep(1)
-    arduino.SetArmMotorPositionValue(1050)
+    arduino.SetArmMotorPositionValue(1100)
     # return
     time.sleep(1)
     esp32.set_angle(73)
@@ -693,6 +703,7 @@ def pick_up_material():
     arduino.CloseClaw()
     time.sleep(1)
     arduino.SetArmMotorPositionValue(1320)
+    time.sleep(3)
 
 def do_temp_zone_routine():
     esp32.set_angle(0)
@@ -732,28 +743,26 @@ def wait_and_pick_up(cap, target_color="GREEN"):
     
 
 def main():
-    esp32.set_angle(0)
-    return
-    cap = vision_ball.setup_camera(2)
-    qr_data = "123"
     colors = {
         "1": "RED",
         "2": "GREEN",
         "3": "BLUE"
     }
-    # qr_data = flag_1()
-    
+    cap = vision_ball.setup_camera(2)
 
-    # calibrate_at_pickup_zone(cap=cap)
-    # wait_and_pick_up(cap, target_color=colors[qr_data[0]])
-    # put_material_into_storage_1()
-    # wait_and_pick_up(cap, target_color=colors[qr_data[1]])
-    # put_material_into_storage_2()
-    # wait_and_pick_up(cap, target_color=colors[qr_data[2]])
-    # put_material_into_storage_3()
+    qr_data = flag_1()
+
+
+    calibrate_at_pickup_zone(cap=cap, step=70)
+    wait_and_pick_up(cap, target_color=colors[qr_data[0]])
+    put_material_into_storage_1()
+    wait_and_pick_up(cap, target_color=colors[qr_data[1]])
+    put_material_into_storage_2()
+    wait_and_pick_up(cap, target_color=colors[qr_data[2]])
+    put_material_into_storage_3()
 
     flag_2()
-    return
+
     calibrate_at_place_zone(cap=cap, target_color=colors[qr_data[0]])
     pick_material_from_storage_1()
     place_material()
@@ -763,8 +772,20 @@ def main():
     calibrate_at_place_zone(cap=cap, target_color=colors[qr_data[2]])
     pick_material_from_storage_3()
     place_material()
-    calibrate_at_pickup_zone(cap=cap)
-
+    
+    
+    calibrate_at_place_zone(cap=cap, target_color=colors[qr_data[0]], top_flag=True)
+    pick_up_material()
+    put_material_into_storage_3()
+    esp32.set_angle(0)
+    calibrate_at_place_zone(cap=cap, target_color=colors[qr_data[1]], top_flag=True)
+    pick_up_material()
+    put_material_into_storage_2()
+    esp32.set_angle(0)
+    calibrate_at_place_zone(cap=cap, target_color=colors[qr_data[2]], top_flag=True)
+    pick_up_material()
+    put_material_into_storage_1()
+    esp32.set_angle(0)
     # put_shit(cap)
     # put_material_into_storage_2()
     # put_shit(cap)
@@ -775,7 +796,7 @@ def main():
     # for i in range(10):
     #     print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # calibrate_at_pickup_zone()
-    print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
+    # print(vision_ball.get_chosen_circle_color_and_position(cap=cap))
     # calibrate_at_line("yellow","straight", 240)
     # flag_1()
     # arduino.ResetArmMotorPosition()

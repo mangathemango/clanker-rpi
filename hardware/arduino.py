@@ -1,7 +1,7 @@
 import serial
 import dotenv
 
-arduino_serial = serial.Serial(dotenv.get_key(".env", "ARDUINO_PORT"), 115200)
+arduino_serial = serial.Serial("/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_34330303436351E080E1-if00", 115200)
 
 
 def ResetArmMotorPosition():

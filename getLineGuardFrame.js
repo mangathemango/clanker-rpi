@@ -1,7 +1,7 @@
 const fs = require('fs');
 const axios = require('axios');
 
-async function getLineGuardFrame(color = 'gray', orientation = 'straight', camera_index = 2) {
+async function getLineGuardFrame(color = 'yellow', orientation = 'straight', camera_index = 2) {
     const url = `http://100.71.55.8:8000/getLineGuardFrame?color=${color}&orientation=${orientation}&camera_index=${camera_index}`;
 
     try {
